@@ -3,15 +3,17 @@ import { View, TextInput, Button, Alert, StyleSheet, SafeAreaView } from 'react-
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
+import { useAuth } from '../context/AuthContext';
 
 export default function RegisterScreen() {
   const [username, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const navigation = useNavigation();
+  const { signIn } = useAuth();
 
   const requiremPassw = (password) => {
-    const passw_req = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{7,}$/;
+    const passw_req = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
     return passw_req.test(password);
   };
 
@@ -31,22 +33,25 @@ export default function RegisterScreen() {
     if (!requiremPassw(password)) {
       Alert.alert(
         'Ошибка',
-        'Пароль должен содержать как минимум 7 символов, одну заглавную букву, одну строчную букву, одну цифру и один специальный символ.'
-      ); return;
+        'Пароль должен содержать как минимум 8 символов, одну заглавную букву, одну строчную букву, одну цифру и один специальный символ.'
+      ); 
+      return;
     }
 
     try {
       const passw_hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-      const resp = await axios.post('http://192.168.0.103:3000/register', {
+      const resp = await axios.post('http://172.20.10.3:3000/register', {
         username,
         email,
         password_hash: passw_hash,
       });
 
       if (resp.status === 200) {
+        const userProfile = resp.data; 
+        signIn(userProfile); 
         Alert.alert('Успешно', 'Пользователь успешно зарегистрирован', [
           { text: 'OK', onPress: () => navigation.navigate('Profile') }
-        ]);
+        ]); 
       } else {
         Alert.alert('Ошибка', 'Не удалось зарегистрироваться');
       }
@@ -85,6 +90,7 @@ export default function RegisterScreen() {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {

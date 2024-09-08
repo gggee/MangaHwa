@@ -19,7 +19,7 @@ export default function SignInScreen() {
 
     try {
       const passwHash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-      const resp = await axios.post('http://192.168.0.103:3000/signin', {
+      const resp = await axios.post('http://172.20.10.3:3000/signin', {
         email,
         password_hash: passwHash,
       });
