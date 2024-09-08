@@ -8,6 +8,8 @@ import Menu from './pages/Menu';
 import RegisterScreen from './pages/RegisterScreen';
 import SignInScreen from './pages/SignInScreen';
 import { AuthProvider } from './context/AuthContext'; 
+import MangaScreen from './pages/MangaScreen';
+import ChapterScreen from './pages/ChapterScreen';
 
 const Stack = createStackNavigator();
 
@@ -21,6 +23,8 @@ export default function App() {
           <Stack.Screen name='Search' component={SearchScreen} />
           <Stack.Screen name='Register' component={RegisterScreen} />
           <Stack.Screen name='SignIn' component={SignInScreen} />
+          <Stack.Screen name='Manga' component={MangaScreen} />
+          <Stack.Screen name='Chapter' component={ChapterScreen} />
         </Stack.Navigator>
         <Menu /> 
       </NavigationContainer>
