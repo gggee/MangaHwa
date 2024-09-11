@@ -1,5 +1,8 @@
 import React from 'react';
+<<<<<<< HEAD
 import 'react-native-gesture-handler';
+=======
+>>>>>>> origin/main
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from './pages/HomeScreen';
@@ -13,14 +16,20 @@ import MangaScreen from './pages/MangaScreen';
 import ChapterScreen from './pages/ChapterScreen';
 import PageScreen from './pages/PageScreen';
 import OnePageScreen from './pages/OnePageScreen';
+<<<<<<< HEAD
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 //npm install react-native-reanimated react-native-gesture-handler
+=======
+>>>>>>> origin/main
 
 const Stack = createStackNavigator();
 
 export default function App() {
   return (
+<<<<<<< HEAD
     <GestureHandlerRootView style={{ flex: 1 }}>
+=======
+>>>>>>> origin/main
     <AuthProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName='Home'>
@@ -37,6 +46,9 @@ export default function App() {
         <Menu /> 
       </NavigationContainer>
     </AuthProvider>
+<<<<<<< HEAD
     </GestureHandlerRootView>
+=======
+>>>>>>> origin/main
   );
 }
