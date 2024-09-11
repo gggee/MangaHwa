@@ -1,23 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, FlatList, SafeAreaView, Image, TouchableOpacity, Button } from 'react-native';
+import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Button } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 
 export default function ChapterScreen() {
   const route = useRoute();
   const { manga } = route.params;
   const [chapters, setChapters] = useState<any[]>([]);
-  const [select_chapter, setSelectChapter] = useState<any | null>(null);
-  const [pages, setPages] = useState<string[]>([]);
   const navigation = useNavigation();
 
   useEffect(() => {
     const fetchChapters = async () => {
       try {
-        const manga_chapters = await getMangaChapters(manga.id);
+        const manga_chapters = await getAllMangaChapters(manga.id);
         setChapters(manga_chapters);
-        if (manga_chapters.length > 0) {
-          setSelectChapter(manga_chapters[0]);
-        }
       } catch (err) {
         console.error('Ошибка:', err.message);
       }
@@ -27,9 +22,8 @@ export default function ChapterScreen() {
 
   const handleSelectChapter = async (chapter: any) => {
     try {
-      setSelectChapter(chapter);
-      const chapter_pages = await getChapterPages(chapter.id);
-      setPages(chapter_pages);
+      const pages = await getChapterPages(chapter.id); 
+      navigation.navigate('OnePage', { chapter, pages, cur_page_index: 0 }); 
     } catch (err) {
       console.error('Ошибка:', err.message);
     }
@@ -43,61 +37,46 @@ export default function ChapterScreen() {
     </TouchableOpacity>
   );
 
-  const renderPageItem = ({ item }: { item: string }) => (
-    <Image
-      source={{ uri: item }}
-      style={styles.page_img}
-      resizeMode="contain"
-    />
-  );
-
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.block}>
-        <Button title="Back to Manga" onPress={() => navigation.goBack()} />
+        <Button title="Back to manga" onPress={() => navigation.goBack()} />
         <Text style={styles.header}>Chapters:</Text>
         <FlatList
           data={chapters}
           keyExtractor={(item) => item.id}
           renderItem={renderChapterItem}
         />
-
-        {select_chapter && (
-          <>
-            <Text style={styles.sub_header}>Pages of the selected chapter:</Text>
-            <FlatList
-              data={pages}
-              keyExtractor={(item, index) => index.toString()}
-              renderItem={renderPageItem}
-              horizontal
-              pagingEnabled
-            />
-          </>
-        )}
       </View>
     </SafeAreaView>
   );
 }
 
-async function getMangaChapters(mangaId: string) {
-  const resp = await fetch(`https://api.mangadex.org/chapter?manga=${mangaId}`);
-  const data = await resp.json();
-  if (data.data && data.data.length > 0) {
-    return data.data;
-  } else {
-    throw new Error('Главы не найдены');
+async function getAllMangaChapters(mangaId: string) {
+  let all_chapters: any[] = []; //по 100 чтоб не нагружать
+  let limit = 100;
+  let offset = 0; 
+  let end = true;
+  while (end) {
+    const resp = await fetch(`https://api.mangadex.org/chapter?manga=${mangaId}&limit=${limit}&offset=${offset}`);
+    const data = await resp.json();
+    if (data.data && data.data.length > 0) {
+      all_chapters = all_chapters.concat(data.data);
+      offset += limit;
+      end = data.total > all_chapters.length;
+    } else {
+      end = false;
+    }
   }
+  return all_chapters.length > 0 ? all_chapters : [];
 }
 
 async function getChapterPages(chapterId: string) {
   const resp = await fetch(`https://api.mangadex.org/at-home/server/${chapterId}`);
   const data = await resp.json();
-  if (data.baseUrl && data.chapter) {
-    const pages = data.chapter.data.map((page: string) => `${data.baseUrl}/data/${data.chapter.hash}/${page}`);
-    return pages;
-  } else {
-    throw new Error('Страницы не найдены');
-  }
+  const baseUrl = data.baseUrl;
+  const pages = data.chapter.data.map((filename: string) => `${baseUrl}/data/${data.chapter.hash}/${filename}`);
+  return pages; 
 }
 
 const styles = StyleSheet.create({
@@ -119,17 +98,4 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 4,
   },
-  sub_header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 8,
-  },
-  page_img: {
-    width: 300,
-    height: 400,
-    marginBottom: 16,
-  },
 });
-
-//доделать работу с главами
-//страницы отделить на разные вкладки 
