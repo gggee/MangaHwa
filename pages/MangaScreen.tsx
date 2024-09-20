@@ -7,11 +7,11 @@ export default function MangaScreen() {
   const route = useRoute();
   const { manga } = route.params;
   const navigation = useNavigation();
-  const { userProfile } = useAuth();
-  const [author, setAuthor] = useState<string | null>(null);
-  const [artist, setArtist] = useState<string | null>(null);
-  const [genres, setGenres] = useState<string[]>([]);
-  const [coverUrl, setCoverUrl] = useState<string | null>(null);
+  const { userProfile } = useAuth(); 
+  const [author, setAuthor] = useState(null);
+  const [artist, setArtist] = useState(null);
+  const [genres, setGenres] = useState([]);
+  const [coverUrl, setCoverUrl] = useState(null);
 
   useEffect(() => {
     const fetchDetailsAndSend = async () => {
@@ -40,14 +40,16 @@ export default function MangaScreen() {
   }, [manga.id]);
 
   const addToCollection = async () => {
-    if (!userProfile) { Alert.alert('Ошибка', 'Пожалуйста, войдите в аккаунт'); return;}
-  
+    if (!userProfile || !userProfile.id) {
+      Alert.alert('Ошибка', 'Не удалось добавить мангу в коллекцию. Пожалуйста, войдите в систему.');
+      return;
+    }
+
     try {
-      const response = await fetch('http://192.168.0.105:3000/collection', {
+      const response = await fetch('http://192.168.0.105:3001/collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${userProfile.token}`,
         },
         body: JSON.stringify({
           user_id: userProfile.id,
@@ -56,16 +58,18 @@ export default function MangaScreen() {
         }),
       });
 
-      if (!response.ok) { throw new Error('Не удалось добавить мангу в коллекцию');}
+      if (!response.ok) {
+        throw new Error('Не удалось добавить мангу в коллекцию');
+      }
       Alert.alert('Успех', 'Манга добавлена в коллекцию');
     } catch (error) {
       Alert.alert('Ошибка', error.message);
     }
   };
 
-  const sendMangaToServer = async (mangaData: any) => {
+  const sendMangaToServer = async (mangaData) => {
     try {
-      const response = await fetch('http://192.168.0.105:3000/add-manga', {
+      const response = await fetch('http://192.168.0.105:3001/add-manga', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -73,8 +77,11 @@ export default function MangaScreen() {
         body: JSON.stringify(mangaData),
       });
 
-      if (!response.ok) { throw new Error('Не удалось добавить мангу на сервер'); }
+      if (!response.ok) {
+        throw new Error('Не удалось добавить мангу на сервер');
+      }
       console.log('Манга успешно добавлена на сервер');
+      console.log(userProfile.id);
     } catch (error) {
       console.error('Ошибка:', error.message);
     }
@@ -103,19 +110,19 @@ export default function MangaScreen() {
   );
 }
 
-async function getMangaDetails(mangaId: string) {
+async function getMangaDetails(mangaId) {
   const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
   const data = await resp.json();
 
   if (data.data && data.data.relationships) {
     const relationships = data.data.relationships;
-    const author_rel_ship = relationships.find((rel: any) => rel.type === 'author');
-    const artist_rel_ship = relationships.find((rel: any) => rel.type === 'artist');
-    const cover_art_rel_ship = relationships.find((rel: any) => rel.type === 'cover_art');
+    const author_rel_ship = relationships.find((rel) => rel.type === 'author');
+    const artist_rel_ship = relationships.find((rel) => rel.type === 'artist');
+    const cover_art_rel_ship = relationships.find((rel) => rel.type === 'cover_art');
 
     const author = author_rel_ship ? await fetchAuthorOrArtist(author_rel_ship.id) : null;
     const artist = artist_rel_ship ? await fetchAuthorOrArtist(artist_rel_ship.id) : null;
-    const genres = data.data.attributes.tags.map((tag: any) => tag.attributes.name.en);
+    const genres = data.data.attributes.tags.map((tag) => tag.attributes.name.en);
     const coverUrl = cover_art_rel_ship ? await fetchCoverArt(cover_art_rel_ship.id) : null;
     return { author, artist, genres, coverUrl };
   } else {
@@ -123,7 +130,7 @@ async function getMangaDetails(mangaId: string) {
   }
 }
 
-async function fetchAuthorOrArtist(id: string) {
+async function fetchAuthorOrArtist(id) {
   const resp = await fetch(`https://api.mangadex.org/author/${id}`);
   const data = await resp.json();
   if (data.data) {
@@ -133,12 +140,12 @@ async function fetchAuthorOrArtist(id: string) {
   }
 }
 
-async function fetchCoverArt(id: string) {
+async function fetchCoverArt(id) {
   const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
   const data = await resp.json();
   if (data.data) {
     const manga_rel_ship = data.data.relationships.find(
-      (rel: any) => rel.type === 'manga'
+      (rel) => rel.type === 'manga'
     );
     if (!manga_rel_ship) {
       throw new Error('Манга не найдена в списках обложек');

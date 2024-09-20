@@ -1,18 +1,46 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userProfile, setUserProfile] = useState(null); 
+  const [userProfile, setUserProfile] = useState(null);
 
-  const signIn = (data) => {
+  useEffect(() => {
+    const loadUserProfile = async () => {
+      try {
+        const storedUser = await AsyncStorage.getItem('userProfile');
+        if (storedUser) {
+          const parsedUser = JSON.parse(storedUser);
+          setIsAuthenticated(true);
+          setUserProfile(parsedUser);
+        }
+      } catch (error) {
+        console.error('Failed to load user profile:', error);
+      }
+    };
+    loadUserProfile();
+  }, []);
+
+  const signIn = async (data) => {
     setIsAuthenticated(true);
-    setUserProfile(data); 
+    setUserProfile(data);
+    await saveUserProfile(data);
   };
 
-  const signOut = () => {
+  const signOut = async () => {
     setIsAuthenticated(false);
-    setUserProfile(null); 
+    setUserProfile(null);
+    await AsyncStorage.removeItem('userProfile');
+  };
+
+  const saveUserProfile = async (profile) => {
+    try {
+      await AsyncStorage.setItem('userProfile', JSON.stringify(profile));
+    } catch (e) {
+      console.error('Failed to save user profile:', e);
+    }
   };
 
   return (
