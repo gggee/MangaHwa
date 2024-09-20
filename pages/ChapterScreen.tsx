@@ -6,10 +6,7 @@ export default function ChapterScreen() {
   const route = useRoute();
   const { manga } = route.params;
   const [chapters, setChapters] = useState<any[]>([]);
-<<<<<<< HEAD
   const [load, setLoad] = useState(true); 
-=======
->>>>>>> origin/main
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -19,11 +16,8 @@ export default function ChapterScreen() {
         setChapters(manga_chapters);
       } catch (err) {
         console.error('Ошибка:', err.message);
-<<<<<<< HEAD
       } finally {
         setLoad(false); 
-=======
->>>>>>> origin/main
       }
     };
     fetchChapters();
@@ -51,7 +45,6 @@ export default function ChapterScreen() {
       <View style={styles.block}>
         <Button title="Back to manga" onPress={() => navigation.goBack()} />
         <Text style={styles.header}>Chapters:</Text>
-<<<<<<< HEAD
         {load ? (
           <Text style={styles.loading}>Пожалуйста подождите, главы загружаются</Text>
         ) : (
@@ -61,13 +54,6 @@ export default function ChapterScreen() {
             renderItem={renderChapterItem}
           />
         )}
-=======
-        <FlatList
-          data={chapters}
-          keyExtractor={(item) => item.id}
-          renderItem={renderChapterItem}
-        />
->>>>>>> origin/main
       </View>
     </SafeAreaView>
   );
@@ -119,12 +105,9 @@ const styles = StyleSheet.create({
     fontSize: 16,
     marginVertical: 4,
   },
-<<<<<<< HEAD
   loading: {
     fontSize: 18,
     textAlign: 'center',
     marginVertical: 20,
   },
-=======
->>>>>>> origin/main
 });

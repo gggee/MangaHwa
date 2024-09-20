@@ -31,27 +31,24 @@ export default function RegisterScreen() {
       return;
     }
     if (!requiremPassw(password)) {
-      Alert.alert(
-        'Ошибка',
-        'Пароль должен содержать как минимум 8 символов, одну заглавную букву, одну строчную букву, одну цифру и один специальный символ.'
-      ); 
+      Alert.alert('Ошибка', 'Пароль должен содержать как минимум 8 символов...');
       return;
     }
-
+  
     try {
       const passw_hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-      const resp = await axios.post('http://10.1.0.128:3000/register', {
+      const resp = await axios.post('http://192.168.0.105:3000/register', {
         username,
         email,
         password_hash: passw_hash,
       });
-
+  
       if (resp.status === 200) {
-        const userProfile = resp.data; 
-        signIn(userProfile); 
-        Alert.alert('Успешно', 'Пользователь успешно зарегистрирован', [
-          { text: 'OK', onPress: () => navigation.navigate('Profile') }
-        ]); 
+        const userProfile = resp.data;
+        signIn(userProfile);
+        Alert.alert('Успешно', 'Регистрация прошла успешно!', [
+          { text: 'OK', onPress: () => navigation.replace('Profile') },
+        ]);
       } else {
         Alert.alert('Ошибка', 'Не удалось зарегистрироваться');
       }
@@ -59,6 +56,7 @@ export default function RegisterScreen() {
       Alert.alert('Ошибка', 'Не удалось подключиться к серверу');
     }
   };
+  
 
   return (
     <SafeAreaView style={styles.container}>

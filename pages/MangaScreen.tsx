@@ -1,30 +1,84 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, SafeAreaView, Button, ScrollView } from 'react-native';
+import { View, Text, Image, StyleSheet, SafeAreaView, Button, ScrollView, Alert } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useAuth } from '../context/AuthContext';
 
 export default function MangaScreen() {
   const route = useRoute();
   const { manga } = route.params;
   const navigation = useNavigation();
+  const { userProfile } = useAuth();
   const [author, setAuthor] = useState<string | null>(null);
   const [artist, setArtist] = useState<string | null>(null);
   const [genres, setGenres] = useState<string[]>([]);
   const [coverUrl, setCoverUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchDetails = async () => {
+    const fetchDetailsAndSend = async () => {
       try {
         const { author, artist, genres, coverUrl } = await getMangaDetails(manga.id);
         setAuthor(author);
         setArtist(artist);
         setGenres(genres);
         setCoverUrl(coverUrl);
+
+        sendMangaToServer({
+          id: manga.id,
+          title: manga.attributes.title.en,
+          description: manga.attributes.description.en,
+          author: author || 'Unknown',
+          artist: artist || 'Unknown',
+          genres: genres,
+          status: manga.attributes.status || 'Unknown', 
+          cover_image_url: coverUrl || '',
+        });
       } catch (err) {
         console.error('Ошибка:', err.message);
       }
     };
-    fetchDetails();
+    fetchDetailsAndSend();
   }, [manga.id]);
+
+  const addToCollection = async () => {
+    if (!userProfile) { Alert.alert('Ошибка', 'Пожалуйста, войдите в аккаунт'); return;}
+  
+    try {
+      const response = await fetch('http://192.168.0.105:3000/collection', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${userProfile.token}`,
+        },
+        body: JSON.stringify({
+          user_id: userProfile.id,
+          manga_id: manga.id,
+          status: 'Прочитано',
+        }),
+      });
+
+      if (!response.ok) { throw new Error('Не удалось добавить мангу в коллекцию');}
+      Alert.alert('Успех', 'Манга добавлена в коллекцию');
+    } catch (error) {
+      Alert.alert('Ошибка', error.message);
+    }
+  };
+
+  const sendMangaToServer = async (mangaData: any) => {
+    try {
+      const response = await fetch('http://192.168.0.105:3000/add-manga', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(mangaData),
+      });
+
+      if (!response.ok) { throw new Error('Не удалось добавить мангу на сервер'); }
+      console.log('Манга успешно добавлена на сервер');
+    } catch (error) {
+      console.error('Ошибка:', error.message);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,6 +96,7 @@ export default function MangaScreen() {
         <Text style={styles.sub_header}>Author: {author || 'Unknown'}</Text>
         <Text style={styles.sub_header}>Artist: {artist || 'Unknown'}</Text>
         <Button title="View chapters" onPress={() => navigation.navigate('Chapter', { manga })} />
+        <Button title="Add to Collection" onPress={addToCollection} />
         <Button title="Back to search" onPress={() => navigation.goBack()} />
       </ScrollView>
     </SafeAreaView>
@@ -79,25 +134,25 @@ async function fetchAuthorOrArtist(id: string) {
 }
 
 async function fetchCoverArt(id: string) {
-    const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
-    const data = await resp.json();
-    if (data.data) {
-      const manga_rel_ship = data.data.relationships.find(
-        (rel: any) => rel.type === 'manga'
-      );
-      if (!manga_rel_ship) {
-        throw new Error('Манга не найдена в списках обложек');
-      }
-  
-      const mangaId = manga_rel_ship.id; 
-      const { fileName } = data.data.attributes;
-      const coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
-      return coverUrl;
-    } else {
-      throw new Error('Обложка не найдена');
+  const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
+  const data = await resp.json();
+  if (data.data) {
+    const manga_rel_ship = data.data.relationships.find(
+      (rel: any) => rel.type === 'manga'
+    );
+    if (!manga_rel_ship) {
+      throw new Error('Манга не найдена в списках обложек');
     }
+
+    const mangaId = manga_rel_ship.id;
+    const { fileName } = data.data.attributes;
+    const coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
+    return coverUrl;
+  } else {
+    throw new Error('Обложка не найдена');
   }
-  
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
