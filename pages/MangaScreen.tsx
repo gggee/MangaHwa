@@ -1,22 +1,26 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, SafeAreaView, Button, ScrollView, Alert } from 'react-native';
+import { View, Text, Image, StyleSheet, SafeAreaView, Button, ScrollView, Alert, Modal } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { RadioButton } from 'react-native-paper'; 
 import { useAuth } from '../context/AuthContext';
 
 export default function MangaScreen() {
   const route = useRoute();
   const { manga } = route.params;
   const navigation = useNavigation();
-  const { userProfile } = useAuth(); 
+  const { userProfile } = useAuth();
   const [author, setAuthor] = useState(null);
   const [artist, setArtist] = useState(null);
   const [genres, setGenres] = useState([]);
   const [coverUrl, setCoverUrl] = useState(null);
+  const [modalVisible, setModalVisible] = useState(false); 
+  const [modalAddVisible, setModalAddVisible] = useState(false);
+  const [collectionStatus, setCollectionStatus] = useState('Прочитано'); 
 
   useEffect(() => {
     const fetchDetailsAndSend = async () => {
       try {
-        const { author, artist, genres, coverUrl } = await getMangaDetails(manga.id);
+        const { author, artist, genres, coverUrl, status } = await getMangaDetails(manga.id);
         setAuthor(author);
         setArtist(artist);
         setGenres(genres);
@@ -29,7 +33,7 @@ export default function MangaScreen() {
           author: author || 'Unknown',
           artist: artist || 'Unknown',
           genres: genres,
-          status: manga.attributes.status || 'Unknown', 
+          status: status || 'Unknown',
           cover_image_url: coverUrl || '',
         });
       } catch (err) {
@@ -54,14 +58,16 @@ export default function MangaScreen() {
         body: JSON.stringify({
           user_id: userProfile.id,
           manga_id: manga.id,
-          status: 'Прочитано',
+          status: collectionStatus, 
         }),
       });
 
       if (!response.ok) {
         throw new Error('Не удалось добавить мангу в коллекцию');
       }
-      Alert.alert('Успех', 'Манга добавлена в коллекцию');
+
+      setModalAddVisible(false); 
+      setModalVisible(true); 
     } catch (error) {
       Alert.alert('Ошибка', error.message);
     }
@@ -81,7 +87,6 @@ export default function MangaScreen() {
         throw new Error('Не удалось добавить мангу на сервер');
       }
       console.log('Манга успешно добавлена на сервер');
-      console.log(userProfile.id);
     } catch (error) {
       console.error('Ошибка:', error.message);
     }
@@ -98,14 +103,73 @@ export default function MangaScreen() {
           />
         )}
         <Text style={styles.sub_header}>Genres: {genres.join(', ')}</Text>
+        <Text style={styles.sub_header}>Status: {manga.attributes.status || 'Unknown'}</Text>
         <Text style={styles.sub_header}>Chapters: {manga.attributes.chapter_count}</Text>
         <Text style={styles.descrip}>{manga.attributes.description.en}</Text>
         <Text style={styles.sub_header}>Author: {author || 'Unknown'}</Text>
         <Text style={styles.sub_header}>Artist: {artist || 'Unknown'}</Text>
         <Button title="View chapters" onPress={() => navigation.navigate('Chapter', { manga })} />
-        <Button title="Add to Collection" onPress={addToCollection} />
+        <Button title="Add to Collection" onPress={() => setModalAddVisible(true)} />
         <Button title="Back to search" onPress={() => navigation.goBack()} />
       </ScrollView>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalVisible}
+        onRequestClose={() => {
+          setModalVisible(!modalVisible);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Манга успешно добавлена в коллекцию!</Text>
+            <Button
+              title="Закрыть"
+              onPress={() => setModalVisible(!modalVisible)}
+            />
+          </View>
+        </View>
+      </Modal>
+
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={modalAddVisible}
+        onRequestClose={() => {
+          setModalAddVisible(!modalAddVisible);
+        }}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalView}>
+            <Text style={styles.modalText}>Выберите статус для добавления в коллекцию</Text>
+            <RadioButton.Group onValueChange={value => setCollectionStatus(value)} value={collectionStatus}>
+              <View style={styles.radioContainer}>
+                <RadioButton value="Прочитано" />
+                <Text>Прочитано</Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <RadioButton value="Читаю" />
+                <Text>Читаю</Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <RadioButton value="В планах" />
+                <Text>В планах</Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <RadioButton value="Брошено" />
+                <Text>Брошено</Text>
+              </View>
+              <View style={styles.radioContainer}>
+                <RadioButton value="Любимое" />
+                <Text>Любимое</Text>
+              </View>
+            </RadioButton.Group>
+            <Button title="Добавить в коллекцию" onPress={addToCollection} />
+            <Button title="Отмена" onPress={() => setModalAddVisible(!modalAddVisible)} />
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -124,7 +188,8 @@ async function getMangaDetails(mangaId) {
     const artist = artist_rel_ship ? await fetchAuthorOrArtist(artist_rel_ship.id) : null;
     const genres = data.data.attributes.tags.map((tag) => tag.attributes.name.en);
     const coverUrl = cover_art_rel_ship ? await fetchCoverArt(cover_art_rel_ship.id) : null;
-    return { author, artist, genres, coverUrl };
+    const status = data.data.attributes.status || 'Unknown';
+    return { author, artist, genres, coverUrl, status };
   } else {
     throw new Error('Данные не найдены');
   }
@@ -181,13 +246,42 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   sub_header: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginVertical: 8,
+    fontSize: 18,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   descrip: {
     fontSize: 16,
-    marginVertical: 8,
-    color: 'gray',
+    marginBottom: 16,
+  },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalView: {
+    width: '80%',
+    backgroundColor: 'white',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalText: {
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  radioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
   },
 });

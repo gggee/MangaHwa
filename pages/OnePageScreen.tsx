@@ -33,7 +33,7 @@ export default function OnePageScreen() {
   };
 
   const handleGoBack = () => {
-    navigation.navigate('Chapter', { manga });
+    navigation.navigate('Chapter', { manga: manga });
   };
 
   const panResponder = useRef(

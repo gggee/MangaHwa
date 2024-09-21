@@ -23,12 +23,12 @@ export default function ChapterScreen() {
     fetchChapters();
   }, [manga]);
 
-  const handleSelectChapter = async (chapter: any) => {
+  const handleSelectChapter = async (chapter) => {
     try {
-      const pages = await getChapterPages(chapter.id); 
-      navigation.navigate('OnePage', { chapter, pages, cur_page_index: 0 }); 
+        const pages = await getChapterPages(chapter.id);
+        navigation.navigate('OnePage', { chapter, pages, cur_page_index: 0, manga }); 
     } catch (err) {
-      console.error('Ошибка:', err.message);
+        console.error('Ошибка:', err.message);
     }
   };
 
