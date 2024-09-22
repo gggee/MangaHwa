@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity } from 'react-native';
+import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext'; 
 import { useNavigation } from '@react-navigation/native';
 
-export default function ProfileScreen () {
+export default function ProfileScreen() {
   const { signOut, userProfile } = useAuth(); 
   const navigation = useNavigation();
   const [selectedCategory, setSelectedCategory] = useState('read');
@@ -14,31 +14,23 @@ export default function ProfileScreen () {
     planned: [],
     favorites: [],
   });
-
   const statusMapping = {
     'прочитано': 'read',
     'в процессе': 'reading',
     'брошено': 'dropped',
     'в планах': 'planned',
-    'избранное': 'favorites',
+    'любимое': 'favorites',
   };
 
   useEffect(() => {
-    if (!userProfile) {
-      navigation.navigate('SignIn'); 
-    } else {
-      fetchMangaCollections(userProfile.id); 
-    }
+    if (!userProfile) { navigation.navigate('SignIn'); } 
+    else { fetchMangaCollections(userProfile.id); }
   }, [userProfile, navigation]);
 
   const fetchMangaCollections = async (userId) => {
     try {
       const resp = await fetch(`http://192.168.0.105:3001/user-collection/${userId}`);
-      if (!resp.ok) {
-        throw new Error('Network response was not ok');
-      }
       const data = await resp.json();
-
       const categorizedManga = {
         read: [],
         reading: [],
@@ -47,18 +39,42 @@ export default function ProfileScreen () {
         favorites: [],
       };
 
-      data.forEach(manga => {
+      await Promise.all(data.map(async (manga) => {
+        const coverUrl = await fetchCoverArt(manga.id);
         const status_key = statusMapping[manga.status.toLowerCase()];
         if (status_key) {
-          categorizedManga[status_key].push(manga);
+          categorizedManga[status_key].push({
+            id: manga.id,
+            title: manga.title,
+            cover_image_url: coverUrl
+          });
         } else {
           console.warn(`Invalid manga status: ${manga.status}`);
         }
-      });
-
+      }));
       setMangaData(categorizedManga); 
     } catch (error) {
       console.error('Error fetching manga collections:', error);
+    }
+  };
+
+  const fetchCoverArt = async (mangaId) => {
+    try {
+      const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
+      const data = await resp.json();
+      if (data.data && data.data.relationships) {
+        const cover_rel_ship = data.data.relationships.find(rel => rel.type === 'cover_art');
+        if (cover_rel_ship) {
+          const { id } = cover_rel_ship;
+          const cover_resp = await fetch(`https://api.mangadex.org/cover/${id}`);
+          const cover_data = await cover_resp.json();
+          const filename = cover_data.data.attributes.fileName;
+          return `https://uploads.mangadex.org/covers/${mangaId}/${filename}.256.jpg`;
+        }
+      }
+      return 'https://example.com/default-cover.jpg'; 
+    } catch (error) {
+      return 'https://example.com/default-cover.jpg'; 
     }
   };
 
@@ -68,11 +84,17 @@ export default function ProfileScreen () {
   };
 
   const renderMangaList = (mangaList) => {
+    if (mangaList.length === 0) { return <Text style={styles.emptyMsg}>Empty</Text>; }
     return (
       <ScrollView horizontal style={styles.mangaList}>
         {mangaList.map((manga) => (
           <View key={manga.id} style={styles.mangaCard}>
-            <Text>{manga.title}</Text>
+            <Image
+              source={{ uri: manga.cover_image_url }}
+              style={styles.mangaImg}
+              resizeMode="cover"
+            />
+            <Text style={styles.mangaTitle}>{manga.title}</Text>
           </View>
         ))}
       </ScrollView>
@@ -146,13 +168,30 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   mangaCard: {
-    width: 100,
-    height: 150,
+    width: 120,
+    height: 200,
     backgroundColor: '#f0f0f0',
     marginRight: 10,
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
+    padding: 5,
+  },
+  mangaImg: {
+    width: 100,
+    height: 150,
+    borderRadius: 8,
+  },  
+  mangaTitle: {
+    marginTop: 5,
+    fontSize: 12,
+    fontWeight: 'bold',
+    textAlign: 'center',
+  },
+  emptyMsg: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#888', 
+    marginTop: 20,
   },
 });
-
