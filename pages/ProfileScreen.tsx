@@ -16,7 +16,7 @@ export default function ProfileScreen() {
   });
   const statusMapping = {
     'прочитано': 'read',
-    'в процессе': 'reading',
+    'читаю': 'reading',
     'брошено': 'dropped',
     'в планах': 'planned',
     'любимое': 'favorites',
