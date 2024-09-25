@@ -39,11 +39,20 @@ export default function OnePageScreen() {
       });
       setComments(prevComments => [
         ...prevComments,
-        { ...resp.data, username: userProfile.username }
+        { ...resp.data, username: userProfile.username, user_id: userProfile.id } // Сохраняем user_id для каждого комментария
       ]);
       setCommentText('');
     } catch (err) {
       console.error('Error:', err.response ? err.response.data : err.message);
+    }
+  };
+
+  const deleteComment = async (commentId) => {
+    try {
+      await axios.delete(`http://192.168.0.105:3001/comments/${commentId}`);
+      setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+    } catch (err) {
+      console.error('Error deleting comment:', err.message);
     }
   };
 
@@ -95,6 +104,9 @@ export default function OnePageScreen() {
       <Text style={styles.commentUser}>{item.username}</Text>
       <Text style={styles.commentTxt}>{item.comment_text}</Text>
       <Text style={styles.commentDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+      {item.user_id === userProfile.id && (
+        <Button title="Удалить" onPress={() => deleteComment(item.id)} color="#FF6347" />
+      )}
     </View>
   );
 

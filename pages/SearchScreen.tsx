@@ -8,6 +8,40 @@ export default function SearchScreen() {
   const [coverUrls, setCoverUrls] = useState<Record<string, string>>({}); //ID манги — URL обложки
   const navigation = useNavigation();
 
+  useEffect(() => {
+    fetchRndManga(); 
+  }, []);
+
+  const fetchRndManga = async () => {
+    try {
+      const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=30&offset=${Math.floor(Math.random() * 1000)}`); // Adjust offset as needed
+      const data = await rnd_resp.json();
+
+      if (data.data && data.data.length > 0) {
+        setMangaList(data.data);
+
+        const cover_promis = data.data.map(async (manga) => {
+          const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
+          if (cover_art) {
+            const coverUrl = await fetchCoverArt(cover_art.id);
+            return { id: manga.id, url: coverUrl };
+          }
+          return { id: manga.id, url: '' };
+        });
+
+        const cover_url_arr = await Promise.all(cover_promis);
+        setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
+          temp[id] = url;
+          return temp;
+        }, {} as Record<string, string>));
+      } else {
+        throw new Error('No manga found');
+      }
+    } catch (err) {
+      console.error('Error:', err.message);
+    }
+  };
+
   const handleSearch = async () => {
     try {
       const manga_res = await searchMangaByTitle(title);
@@ -70,7 +104,7 @@ export default function SearchScreen() {
 }
 
 async function searchMangaByTitle(title: string) {
-  const resp = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}`);
+  const resp = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}&limit=30`);
   const data = await resp.json();
   if (data.data && data.data.length > 0) {
     return data.data;
