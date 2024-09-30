@@ -1,11 +1,88 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Button, SafeAreaView, TextInput, FlatList } from 'react-native';
+import { View, Text, Image, StyleSheet, Button, SafeAreaView, TextInput, FlatList, Alert, ActivityIndicator } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 import axios from 'axios'; 
 import { useAuth } from '../context/AuthContext';
 import { PanResponder, Animated as RNAnimated } from 'react-native';
+
+const fetchComments = async (mangaId, chapterId, curPageIndex, setComments, setLoading) => {
+  try {
+    setLoading(true);
+    const resp = await axios.get(`http://192.168.0.104:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
+    setComments(resp.data);
+  } catch (err) {
+    console.error('Error fetching comments:', err.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+const addComment = async (userProfile, mangaId, chapterId, curPageIndex, commentText, setComments, setCommentText, setLoadingComment) => {
+  if (!commentText.trim()) return;
+  try {
+    setLoadingComment(true);
+    const resp = await axios.post('http://192.168.0.104:3001/comments', {
+      user_id: userProfile.id,
+      manga_id: mangaId,
+      chapter_id: chapterId,
+      page_index: curPageIndex,
+      comment_text: commentText,
+    });
+    setComments(prevComments => prevComments.concat({
+      ...resp.data,
+      username: userProfile.username,
+      user_id: userProfile.id
+    }));    
+    setCommentText('');
+  } catch (err) {
+    console.error('Error:', err.response ? err.response.data : err.message);
+  } finally {
+    setLoadingComment(false);
+  }
+};
+
+const deleteComment = async (commentId, userProfile, setComments) => {
+  Alert.alert(
+    "Delete comment?",
+    "Are you sure you want to delete this comment?",
+    [
+      { text: "Cancel", style: "cancel" },
+      { text: "Delete", onPress: async () => {
+          try {
+            await axios.delete(`http://192.168.0.104:3001/comments/${commentId}`);
+            setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
+          } catch (err) {
+            console.error('Error deleting comment:', err.message);
+          }
+        }},
+    ]
+  );
+};
+
+const addBookmark = async (userProfile, mangaId, chapterId, curPageIndex) => {
+  try {
+    await axios.post('http://192.168.0.104:3001/bookmarks', {
+      user_id: userProfile.id,
+      manga_id: mangaId,
+      chapter_id: chapterId,
+      page_index: curPageIndex,
+    });
+    Alert.alert('Bookmark added!');
+  } catch (err) {
+    console.error('Error adding bookmark:', err.message);
+  }
+};
+
+const fetchBookmarks = async (userId, setBookmarks) => {
+  try {
+    const resp = await axios.get(`http://192.168.0.104:3001/bookmarks/${userId}`);
+    setBookmarks(resp.data);
+  } catch (err) {
+    console.error('Error fetching bookmarks:', err.message);
+  }
+};
 
 export default function OnePageScreen() {
   const route = useRoute();
@@ -17,51 +94,17 @@ export default function OnePageScreen() {
   const pan = useRef(new RNAnimated.ValueXY()).current;
   const [comment_txt, setCommentText] = useState('');
   const [comments, setComments] = useState([]);
-
-  const fetchComments = async () => {
-    try {
-      const resp = await axios.get(`http://192.168.0.105:3001/comments/${manga.id}/${chapter.id}/${cur_page_index}`);
-      setComments(resp.data);
-    } catch (err) {
-      console.error('Error fetching comments:', err.message);
-    }
-  };
-
-  const addComment = async () => {
-    if (!comment_txt.trim()) return;
-    try {
-      const resp = await axios.post('http://192.168.0.105:3001/comments', {
-        user_id: userProfile.id,
-        manga_id: manga.id,
-        chapter_id: chapter.id,
-        page_index: cur_page_index,
-        comment_text: comment_txt,
-      });
-      setComments(prevComments => [
-        ...prevComments,
-        { ...resp.data, username: userProfile.username, user_id: userProfile.id } // Сохраняем user_id для каждого комментария
-      ]);
-      setCommentText('');
-    } catch (err) {
-      console.error('Error:', err.response ? err.response.data : err.message);
-    }
-  };
-
-  const deleteComment = async (commentId) => {
-    try {
-      await axios.delete(`http://192.168.0.105:3001/comments/${commentId}`);
-      setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
-    } catch (err) {
-      console.error('Error deleting comment:', err.message);
-    }
-  };
+  const [bookmarks, setBookmarks] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingComment, setLoadingComment] = useState(false); 
 
   useEffect(() => {
-    fetchComments(); 
+    fetchComments(manga.id, chapter.id, cur_page_index, setComments, setLoading);
+    fetchBookmarks(userProfile.id, setBookmarks);
   }, [cur_page_index]);
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ translateX: withSpring(offset.value) }],
+    transform: [{ translateX: withSpring(offset.value, { damping: 10 }) }],
   }));
 
   const handleNextPage = () => {
@@ -82,22 +125,9 @@ export default function OnePageScreen() {
     navigation.navigate('Chapter', { manga: manga });
   };
 
-  const panResponder = useRef(
-    PanResponder.create({
-      onMoveShouldSetPanResponder: () => true,
-      onPanResponderMove: (e, gestureState) => {
-        pan.setValue({ x: gestureState.dx, y: 0 });
-      },
-      onPanResponderRelease: (e, gestureState) => {
-        if (gestureState.dx > 50 && cur_page_index > 0) {
-          handlePrevPage();
-        } else if (gestureState.dx < -50 && cur_page_index < pages.length - 1) {
-          handleNextPage();
-        }
-        RNAnimated.spring(pan, { toValue: { x: 0, y: 0 }, useNativeDriver: false }).start();
-      },
-    })
-  ).current;
+  const handleAddBookmark = () => {
+    addBookmark(userProfile, manga.id, chapter.id, cur_page_index);
+  };
 
   const renderComment = ({ item }) => (
     <View style={styles.comment}>
@@ -105,41 +135,47 @@ export default function OnePageScreen() {
       <Text style={styles.commentTxt}>{item.comment_text}</Text>
       <Text style={styles.commentDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
       {item.user_id === userProfile.id && (
-        <Button title="Удалить" onPress={() => deleteComment(item.id)} color="#FF6347" />
+        <Button title="Delete" onPress={() => deleteComment(item.id, userProfile, setComments)} color="#FF6347" />
       )}
     </View>
   );
 
   return (
     <SafeAreaView style={styles.container}>
-      <FlatList
-        data={comments}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={renderComment}
-        contentContainerStyle={styles.comments_block}
-        ListHeaderComponent={
-          <>
-            <Text style={styles.header}>
-              Chapter {chapter.attributes.chapter} - Page {cur_page_index + 1}
-            </Text>
-            <Animated.View style={[styles.pageContainer, animatedStyle]}>
-              <Image source={{ uri: cur_page }} style={styles.page_img} resizeMode="contain" />
-            </Animated.View>
-            <View style={styles.buttons}>
-              <Button title="Previous" onPress={handlePrevPage} disabled={cur_page_index === 0} />
-              <Button title="Next" onPress={handleNextPage} disabled={cur_page_index === pages.length - 1} />
-            </View>
-            <Button title="Back to chapters" onPress={handleGoBack} style={styles.backBtn} />
-            <TextInput
-              style={styles.input}
-              value={comment_txt}
-              onChangeText={setCommentText}
-              placeholder="Оставьте комментарий..."
-            />
-            <Button title="Отправить комментарий" onPress={addComment} />
-          </>
-        }
-      />
+      {loading ? (
+        <ActivityIndicator size="large" color="#0000ff" />
+      ) : (
+        <FlatList
+          data={comments}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={renderComment}
+          contentContainerStyle={styles.comments_block}
+          ListHeaderComponent={
+            <>
+              <Text style={styles.header}>
+                Chapter {chapter.attributes.chapter} - Page {cur_page_index + 1}
+              </Text>
+              <Animated.View style={[styles.pageContainer, animatedStyle]}>
+                <Image source={{ uri: cur_page }} style={styles.page_img} resizeMode="contain" />
+              </Animated.View>
+              <View style={styles.buttons}>
+                <Button title="Previous" onPress={handlePrevPage} disabled={cur_page_index === 0} />
+                <Button title="Next" onPress={handleNextPage} disabled={cur_page_index === pages.length - 1} />
+              </View>
+              <Button title="Back to chapters" onPress={handleGoBack} style={styles.backBtn} />
+              <Button title="Add bookmark" onPress={handleAddBookmark} />
+              <TextInput
+                style={styles.input}
+                value={comment_txt}
+                onChangeText={setCommentText}
+                placeholder="Leave a comment..."
+              />
+              <Button title="Submit a comment" onPress={() => addComment(userProfile, manga.id, chapter.id, cur_page_index, comment_txt, setComments, setCommentText, setLoadingComment)} disabled={!comment_txt.trim() || loadingComment} />
+              {loadingComment && <ActivityIndicator size="small" color="#0000ff" />}
+            </>
+          }
+        />
+      )}
     </SafeAreaView>
   );  
 }
@@ -177,32 +213,39 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 10,
     left: 10,
-    width: '90%',
   },
-  comment: {
-    backgroundColor: '#f0f0f0',
+  input: {
+    borderColor: '#ccc',
+    borderWidth: 1,
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
   },
-  commentTxt: {
-    fontSize: 16,
-  },
-  commentDate: {
-    fontSize: 12,
-    color: '#999',
-    textAlign: 'right',
+  comment: {
+    padding: 10,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
   },
   commentUser: {
     fontWeight: 'bold',
-    marginBottom: 4,
-  },  
-  input: {
-    borderWidth: 1,
-    borderColor: '#ccc',
+  },
+  commentTxt: {
+    marginVertical: 5,
+  },
+  commentDate: {
+    fontSize: 12,
+    color: '#888',
+  },
+  bookmarksSection: {
     padding: 10,
+  },
+  bookmarksHeader: {
+    fontWeight: 'bold',
     marginBottom: 10,
-    borderRadius: 5,
-    width: '100%',
+  },
+  bookmark: {
+    padding: 10,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1,
   },
 });

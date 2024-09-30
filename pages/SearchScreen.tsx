@@ -2,45 +2,23 @@ import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
-export default function SearchScreen() {
-  const [title, setTitle] = useState<string>('');
-  const [manga_list, setMangaList] = useState<any[]>([]);
-  const [coverUrls, setCoverUrls] = useState<Record<string, string>>({}); //ID манги — URL обложки
+export default function SearchScreen({ route }) {
+  const [title, setTitle] = useState('');
+  const [manga_list, setMangaList] = useState([]);
+  const [coverUrls, setCoverUrls] = useState({});
   const navigation = useNavigation();
+  const { selectedGenres, mangaList } = route.params || {};
 
   useEffect(() => {
-    fetchRndManga(); 
-  }, []);
-
-  const fetchRndManga = async () => {
-    try {
-      const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=30&offset=${Math.floor(Math.random() * 1000)}`); // Adjust offset as needed
-      const data = await rnd_resp.json();
-
-      if (data.data && data.data.length > 0) {
-        setMangaList(data.data);
-
-        const cover_promis = data.data.map(async (manga) => {
-          const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
-          if (cover_art) {
-            const coverUrl = await fetchCoverArt(cover_art.id);
-            return { id: manga.id, url: coverUrl };
-          }
-          return { id: manga.id, url: '' };
-        });
-
-        const cover_url_arr = await Promise.all(cover_promis);
-        setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
-          temp[id] = url;
-          return temp;
-        }, {} as Record<string, string>));
-      } else {
-        throw new Error('No manga found');
-      }
-    } catch (err) {
-      console.error('Error:', err.message);
+    const { mangaList, selectedGenres } = navigation.getState().routes[navigation.getState().index].params || {};
+    if (mangaList) {
+      setMangaList(mangaList);
+    } else if (selectedGenres) {
+      fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls);
+    } else {
+      fetchRndManga(setMangaList, setCoverUrls);
     }
-  };
+  }, []);
 
   const handleSearch = async () => {
     try {
@@ -62,7 +40,7 @@ export default function SearchScreen() {
         return temp;
       }, {} as Record<string, string>));
     } catch (err) {
-      console.error('Ошибка:', err.message);
+      console.error('Error:', err.message);
     }
   };
 
@@ -72,10 +50,11 @@ export default function SearchScreen() {
 
   const renderMangaItem = ({ item }: { item: any }) => {
     const cover_img_url = coverUrls[item.id] || 'https://via.placeholder.com/100x150';
+    const mangaTitle = item.attributes?.title?.en || 'Unknown title'; 
     return (
       <TouchableOpacity onPress={() => handleSelectManga(item)} style={styles.manga_block}>
         <Image source={{ uri: cover_img_url }} style={styles.cover_img} />
-        <Text style={styles.manga_title}>{item.attributes.title.en}</Text>
+        <Text style={styles.manga_title}>{mangaTitle}</Text> 
       </TouchableOpacity>
     );
   };
@@ -91,6 +70,7 @@ export default function SearchScreen() {
           onChangeText={setTitle}
         />
         <Button title="Search" onPress={handleSearch} />
+        <Button title="Genres" onPress={() => navigation.navigate('Genres', { selectedGenres })} /> 
         <FlatList
           data={manga_list}
           keyExtractor={(item) => item.id}
@@ -103,7 +83,72 @@ export default function SearchScreen() {
   );
 }
 
-async function searchMangaByTitle(title: string) {
+async function fetchRndManga(setMangaList, setCoverUrls) {
+  try {
+    const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=30&offset=${Math.floor(Math.random() * 1000)}`);
+    const data = await rnd_resp.json();
+
+    if (data.data && data.data.length > 0) {
+      setMangaList(data.data);
+
+      const cover_promis = data.data.map(async (manga) => {
+        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
+        if (cover_art) {
+          const coverUrl = await fetchCoverArt(cover_art.id);
+          return { id: manga.id, url: coverUrl };
+        }
+        return { id: manga.id, url: '' };
+      });
+
+      const cover_url_arr = await Promise.all(cover_promis);
+      setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
+        temp[id] = url;
+        return temp;
+      }, {} as Record<string, string>));
+    } else {
+      throw new Error('No manga found');
+    }
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
+
+async function fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls) {
+  try {
+    const resp = await fetch('http://192.168.0.104:3001/search-by-genres', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ genres: selectedGenres }),
+    });
+
+    const data = await resp.json();
+    if (resp.ok && data.length > 0) {
+      setMangaList(data);
+      const cover_promis = data.map(async (manga) => {
+        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
+        if (cover_art) {
+          const coverUrl = await fetchCoverArt(cover_art.id);
+          return { id: manga.id, url: coverUrl };
+        }
+        return { id: manga.id, url: '' };
+      });
+
+      const cover_url_arr = await Promise.all(cover_promis);
+      setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
+        temp[id] = url;
+        return temp;
+      }, {} as Record<string, string>));
+    } else {
+      throw new Error('No manga found with the selected genres');
+    }
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+}
+
+async function searchMangaByTitle(title) {
   const resp = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}&limit=30`);
   const data = await resp.json();
   if (data.data && data.data.length > 0) {
@@ -113,7 +158,7 @@ async function searchMangaByTitle(title: string) {
   }
 }
 
-async function fetchCoverArt(id: string) {
+async function fetchCoverArt(id) {
   const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
   const data = await resp.json();
   if (data.data) {

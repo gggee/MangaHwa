@@ -18,39 +18,20 @@ export default function MangaScreen() {
   const [collectionStatus, setCollectionStatus] = useState('Прочитано'); 
 
   useEffect(() => {
-    const fetchDetailsAndSend = async () => {
-      try {
-        const { author, artist, genres, coverUrl, status } = await getMangaDetails(manga.id);
-        setAuthor(author);
-        setArtist(artist);
-        setGenres(genres);
-        setCoverUrl(coverUrl);
-
-        sendMangaToServer({
-          id: manga.id,
-          title: manga.attributes.title.en,
-          description: manga.attributes.description.en,
-          author: author || 'Unknown',
-          artist: artist || 'Unknown',
-          genres: genres,
-          status: status || 'Unknown',
-          cover_image_url: coverUrl || '',
-        });
-      } catch (err) {
-        console.error('Ошибка:', err.message);
-      }
+    const fetchDetails = async () => {
+      await fetchDetailsAndSend(manga.id, setAuthor, setArtist, setGenres, setCoverUrl, sendMangaToServer, manga);
     };
-    fetchDetailsAndSend();
+    fetchDetails();
   }, [manga.id]);
 
   const addToCollection = async () => {
     if (!userProfile || !userProfile.id) {
-      Alert.alert('Ошибка', 'Не удалось добавить мангу в коллекцию. Пожалуйста, войдите в систему.');
+      Alert.alert('Error', 'Failed to add manga to collection. Please log in.');
       return;
     }
 
     try {
-      const response = await fetch('http://192.168.0.105:3001/collection', {
+      const response = await fetch('http://192.168.0.104:3001/collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +44,7 @@ export default function MangaScreen() {
       });
 
       if (!response.ok) {
-        throw new Error('Не удалось добавить мангу в коллекцию');
+        throw new Error('Failed to add manga to collection');
       }
 
       setModalAddVisible(false); 
@@ -75,7 +56,7 @@ export default function MangaScreen() {
 
   const sendMangaToServer = async (mangaData) => {
     try {
-      const response = await fetch('http://192.168.0.105:3001/add-manga', {
+      const response = await fetch('http://192.168.0.104:3001/add-manga', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -123,9 +104,9 @@ export default function MangaScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Манга успешно добавлена в коллекцию!</Text>
+            <Text style={styles.modalText}>Manga successfully added to collection!</Text>
             <Button
-              title="Закрыть"
+              title="Close"
               onPress={() => setModalVisible(!modalVisible)}
             />
           </View>
@@ -165,13 +146,36 @@ export default function MangaScreen() {
                 <Text>Любимое</Text>
               </View>
             </RadioButton.Group>
-            <Button title="Добавить в коллекцию" onPress={addToCollection} />
-            <Button title="Отмена" onPress={() => setModalAddVisible(!modalAddVisible)} />
+            <Button title="Add to collection" onPress={addToCollection} />
+            <Button title="Cancel" onPress={() => setModalAddVisible(!modalAddVisible)} />
           </View>
         </View>
       </Modal>
     </SafeAreaView>
   );
+}
+
+async function fetchDetailsAndSend(mangaId, setAuthor, setArtist, setGenres, setCoverUrl, sendMangaToServer, manga) {
+  try {
+    const { author, artist, genres, coverUrl, status } = await getMangaDetails(mangaId);
+    setAuthor(author);
+    setArtist(artist);
+    setGenres(genres);
+    setCoverUrl(coverUrl);
+
+    sendMangaToServer({
+      id: manga.id,
+      title: manga.attributes.title.en,
+      description: manga.attributes.description.en,
+      author: author || 'Unknown',
+      artist: artist || 'Unknown',
+      genres: genres,
+      status: status || 'Unknown',
+      cover_image_url: coverUrl || '',
+    });
+  } catch (err) {
+    console.error('Ошибка:', err.message);
+  }
 }
 
 async function getMangaDetails(mangaId) {
@@ -238,21 +242,21 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 16,
-  },
-  cover_img: {
-    width: 200,
-    height: 300,
-    marginBottom: 16,
+    marginBottom: 10,
   },
   sub_header: {
     fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 8,
+    marginVertical: 5,
   },
   descrip: {
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  cover_img: {
+    width: '100%',
+    height: 300,
+    borderRadius: 15,
+    marginBottom: 20,
   },
   modalOverlay: {
     flex: 1,
@@ -282,6 +286,6 @@ const styles = StyleSheet.create({
   radioContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginVertical: 5,
   },
 });

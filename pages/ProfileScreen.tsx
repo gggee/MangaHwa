@@ -24,59 +24,8 @@ export default function ProfileScreen() {
 
   useEffect(() => {
     if (!userProfile) { navigation.navigate('SignIn'); } 
-    else { fetchMangaCollections(userProfile.id); }
+    else { fetchMangaCollections(userProfile.id, setMangaData, statusMapping); }
   }, [userProfile, navigation]);
-
-  const fetchMangaCollections = async (userId) => {
-    try {
-      const resp = await fetch(`http://192.168.0.105:3001/user-collection/${userId}`);
-      const data = await resp.json();
-      const categorizedManga = {
-        read: [],
-        reading: [],
-        dropped: [],
-        planned: [],
-        favorites: [],
-      };
-
-      await Promise.all(data.map(async (manga) => {
-        const coverUrl = await fetchCoverArt(manga.id);
-        const status_key = statusMapping[manga.status.toLowerCase()];
-        if (status_key) {
-          categorizedManga[status_key].push({
-            id: manga.id,
-            title: manga.title,
-            cover_image_url: coverUrl
-          });
-        } else {
-          console.warn(`Invalid manga status: ${manga.status}`);
-        }
-      }));
-      setMangaData(categorizedManga); 
-    } catch (error) {
-      console.error('Error fetching manga collections:', error);
-    }
-  };
-
-  const fetchCoverArt = async (mangaId) => {
-    try {
-      const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
-      const data = await resp.json();
-      if (data.data && data.data.relationships) {
-        const cover_rel_ship = data.data.relationships.find(rel => rel.type === 'cover_art');
-        if (cover_rel_ship) {
-          const { id } = cover_rel_ship;
-          const cover_resp = await fetch(`https://api.mangadex.org/cover/${id}`);
-          const cover_data = await cover_resp.json();
-          const filename = cover_data.data.attributes.fileName;
-          return `https://uploads.mangadex.org/covers/${mangaId}/${filename}.256.jpg`;
-        }
-      }
-      return 'https://example.com/default-cover.jpg'; 
-    } catch (error) {
-      return 'https://example.com/default-cover.jpg'; 
-    }
-  };
 
   const handleLogout = () => {
     signOut(); 
@@ -108,7 +57,7 @@ export default function ProfileScreen() {
       <View style={styles.block}>
         {userProfile ? (
           <>
-            <Text>Профиль пользователя: {userProfile.username}</Text>
+            <Text>User profile: {userProfile.username}</Text>
             <Button title="Выйти" onPress={handleLogout} />
             <ScrollView horizontal style={styles.categoryScroll}>
               {categories.map((category) => (
@@ -126,11 +75,62 @@ export default function ProfileScreen() {
             </View>
           </>
         ) : (
-          <Text>Загрузка...</Text>
+          <Text>Load...</Text>
         )}
       </View>
     </SafeAreaView>
   );
+}
+
+const fetchMangaCollections = async (userId, setMangaData, statusMapping) => {
+  try {
+    const resp = await fetch(`http://192.168.0.104:3001/user-collection/${userId}`);
+    const data = await resp.json();
+    const categorizedManga = {
+      read: [],
+      reading: [],
+      dropped: [],
+      planned: [],
+      favorites: [],
+    };
+
+    await Promise.all(data.map(async (manga) => {
+      const coverUrl = await fetchCoverArt(manga.id);
+      const status_key = statusMapping[manga.status.toLowerCase()];
+      if (status_key) {
+        categorizedManga[status_key].push({
+          id: manga.id,
+          title: manga.title,
+          cover_image_url: coverUrl
+        });
+      } else {
+        console.warn(`Invalid manga status: ${manga.status}`);
+      }
+    }));
+    setMangaData(categorizedManga); 
+  } catch (error) {
+    console.error('Error fetching manga collections:', error);
+  }
+};
+
+const fetchCoverArt = async (mangaId) => {
+  try {
+    const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
+    const data = await resp.json();
+    if (data.data && data.data.relationships) {
+      const cover_rel_ship = data.data.relationships.find(rel => rel.type === 'cover_art');
+      if (cover_rel_ship) {
+        const { id } = cover_rel_ship;
+        const cover_resp = await fetch(`https://api.mangadex.org/cover/${id}`);
+        const cover_data = await cover_resp.json();
+        const filename = cover_data.data.attributes.fileName;
+        return `https://uploads.mangadex.org/covers/${mangaId}/${filename}.256.jpg`;
+      }
+    }
+    return 'https://example.com/default-cover.jpg'; 
+  } catch (error) {
+    return 'https://example.com/default-cover.jpg'; 
+  }
 };
 
 const styles = StyleSheet.create({
