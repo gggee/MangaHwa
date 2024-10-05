@@ -115,7 +115,7 @@ async function fetchRndManga(setMangaList, setCoverUrls) {
 
 async function fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls) {
   try {
-    const resp = await fetch('http://192.168.0.104:3001/search-by-genres', {
+    const resp = await fetch('http://192.168.0.101:3001/search-by-genres', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

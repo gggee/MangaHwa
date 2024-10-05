@@ -1,16 +1,18 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Button, SafeAreaView, TextInput, FlatList, Alert, ActivityIndicator } from 'react-native';
+import { View, Text, Image, StyleSheet, Button, SafeAreaView, TextInput, FlatList, Alert, ActivityIndicator, TouchableWithoutFeedback } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 import axios from 'axios'; 
 import { useAuth } from '../context/AuthContext';
 import { PanResponder, Animated as RNAnimated } from 'react-native';
+import Modal from 'react-native-modal';
+import ImageViewer from 'react-native-image-zoom-viewer';
 
 const fetchComments = async (mangaId, chapterId, curPageIndex, setComments, setLoading) => {
   try {
     setLoading(true);
-    const resp = await axios.get(`http://192.168.0.104:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
+    const resp = await axios.get(`http://192.168.0.101:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
     setComments(resp.data);
   } catch (err) {
     console.error('Error fetching comments:', err.message);
@@ -23,7 +25,7 @@ const addComment = async (userProfile, mangaId, chapterId, curPageIndex, comment
   if (!commentText.trim()) return;
   try {
     setLoadingComment(true);
-    const resp = await axios.post('http://192.168.0.104:3001/comments', {
+    const resp = await axios.post('http://192.168.0.101:3001/comments', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -51,7 +53,7 @@ const deleteComment = async (commentId, userProfile, setComments) => {
       { text: "Cancel", style: "cancel" },
       { text: "Delete", onPress: async () => {
           try {
-            await axios.delete(`http://192.168.0.104:3001/comments/${commentId}`);
+            await axios.delete(`http://192.168.0.101:3001/comments/${commentId}`);
             setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
           } catch (err) {
             console.error('Error deleting comment:', err.message);
@@ -63,7 +65,7 @@ const deleteComment = async (commentId, userProfile, setComments) => {
 
 const addBookmark = async (userProfile, mangaId, chapterId, curPageIndex) => {
   try {
-    await axios.post('http://192.168.0.104:3001/bookmarks', {
+    await axios.post('http://192.168.0.101:3001/bookmarks', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -77,7 +79,7 @@ const addBookmark = async (userProfile, mangaId, chapterId, curPageIndex) => {
 
 const fetchBookmarks = async (userId, setBookmarks) => {
   try {
-    const resp = await axios.get(`http://192.168.0.104:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.101:3001/bookmarks/${userId}`);
     setBookmarks(resp.data);
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);
@@ -96,7 +98,8 @@ export default function OnePageScreen() {
   const [comments, setComments] = useState([]);
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [loadingComment, setLoadingComment] = useState(false); 
+  const [loadingComment, setLoadingComment] = useState(false);
+  const [isModalVisible, setModalVisible] = useState(false);
 
   useEffect(() => {
     fetchComments(manga.id, chapter.id, cur_page_index, setComments, setLoading);
@@ -156,7 +159,12 @@ export default function OnePageScreen() {
                 Chapter {chapter.attributes.chapter} - Page {cur_page_index + 1}
               </Text>
               <Animated.View style={[styles.pageContainer, animatedStyle]}>
-                <Image source={{ uri: cur_page }} style={styles.page_img} resizeMode="contain" />
+                <TouchableWithoutFeedback onPress={() => setModalVisible(true)}>
+                  <Image source={{ uri: cur_page }} style={styles.page_img} resizeMode="contain" />
+                </TouchableWithoutFeedback>
+                <Modal isVisible={isModalVisible} onBackdropPress={() => setModalVisible(false)}>
+                  <ImageViewer imageUrls={[{ url: cur_page }]} />
+                </Modal>
               </Animated.View>
               <View style={styles.buttons}>
                 <Button title="Previous" onPress={handlePrevPage} disabled={cur_page_index === 0} />
@@ -195,7 +203,7 @@ const styles = StyleSheet.create({
   },
   pageContainer: {
     width: '100%',
-    height: 500,
+    height: 600,
     marginBottom: 16,
   },
   page_img: {
@@ -235,17 +243,5 @@ const styles = StyleSheet.create({
   commentDate: {
     fontSize: 12,
     color: '#888',
-  },
-  bookmarksSection: {
-    padding: 10,
-  },
-  bookmarksHeader: {
-    fontWeight: 'bold',
-    marginBottom: 10,
-  },
-  bookmark: {
-    padding: 10,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
   },
 });

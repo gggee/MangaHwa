@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import { useNavigation } from '@react-navigation/native'; 
 import { useAuth } from '../context/AuthContext';
 
 const fetchBookmarks = async (userId) => {
   try {
-    const resp = await axios.get(`http://192.168.0.104:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.101:3001/bookmarks/${userId}`);
     return resp.data; 
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);
@@ -26,10 +27,10 @@ const fetchCoverArt = async (mangaId) => {
       return `https://uploads.mangadex.org/covers/${mangaId}/${filename}.256.jpg`;
     }
 
-    return 'https://example.com/default-cover.jpg'; 
+    return 'https://via.placeholder.com/100x150'; 
   } catch (error) {
     console.error('Error fetching cover art:', error.message);
-    return 'https://example.com/default-cover.jpg'; 
+    return 'https://via.placeholder.com/100x150'; 
   }
 };
 
@@ -69,7 +70,7 @@ const fetchMangaTitle = async (mangaId) => {
 
 const deleteBookmark = async (userId, chapterId) => {
   try {
-    await axios.delete(`http://192.168.0.104:3001/bookmarks/${userId}/${chapterId}`);
+    await axios.delete(`http://192.168.0.101:3001/bookmarks/${userId}/${chapterId}`);
     return true;
   } catch (err) {
     console.error('Error deleting bookmark:', err.message);
@@ -82,6 +83,7 @@ export default function BookmarkScreen() {
   const [bookmarks, setBookmarks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [chapter_details, setChapterDetails] = useState({});
+  const navigation = useNavigation();  
 
   useEffect(() => {
     const loadBookmarks = async () => {
@@ -149,25 +151,31 @@ export default function BookmarkScreen() {
     }
   };
 
+  const handleSelectManga = (manga: any) => {
+    navigation.navigate('Manga', { manga });
+  };
+
   const renderBookmark = ({ item }) => {
     const { chapterTitle, mangaTitle, coverArt, pageIndex } = chapter_details[item.chapter_id] || {};
 
     return (
-      <View style={styles.bookmark}>
-        <Image source={{ uri: coverArt || 'https://example.com/default-cover.jpg' }} style={styles.mangaImg} />
-        <View style={styles.textContainer}>
-          <Text style={styles.mangaTitle}>{mangaTitle || 'Load...'}</Text>
-          <Text style={styles.chapterTitle}>
-            {`Chapter: ${chapterTitle || 'Untitled'}`}
-          </Text>
-          {pageIndex !== undefined && (
-            <Text style={styles.pageIndex}>{`Page: ${pageIndex}`}</Text> 
-          )}
+      <TouchableOpacity onPress={() => handleSelectManga(item.manga_id)}>
+        <View style={styles.bookmark}>
+          <Image source={{ uri: coverArt || 'https://via.placeholder.com/100x150' }} style={styles.mangaImg} />
+          <View style={styles.textContainer}>
+            <Text style={styles.mangaTitle}>{mangaTitle || 'Load...'}</Text>
+            <Text style={styles.chapterTitle}>
+              {`Chapter: ${chapterTitle || 'Untitled'}`}
+            </Text>
+            {pageIndex !== undefined && (
+              <Text style={styles.pageIndex}>{`Page: ${pageIndex}`}</Text> 
+            )}
+          </View>
+          <TouchableOpacity onPress={() => handleDeleteBookmark(item.chapter_id)} style={styles.deleteBtn}>
+            <Text style={styles.deleteBtnTxt}>Delete</Text>
+          </TouchableOpacity>
         </View>
-        <TouchableOpacity onPress={() => handleDeleteBookmark(item.chapter_id)} style={styles.deleteBtn}>
-          <Text style={styles.deleteBtnTxt}>Delete</Text>
-        </TouchableOpacity>
-      </View>
+      </TouchableOpacity>
     );
   };
 

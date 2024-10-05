@@ -5,7 +5,7 @@ import Menu from './Menu';
 export default function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
-      <Text style={styles.text}>Home</Text>
+      <Text style={styles.text}>Home screen</Text>
     </SafeAreaView>
   );
 }
