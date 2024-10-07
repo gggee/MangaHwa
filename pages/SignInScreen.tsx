@@ -25,17 +25,29 @@ export default function SignInScreen() {
       });
 
       if (resp.status === 200) {
-        const userProfile = resp.data; 
-        signIn(userProfile); 
-        Alert.alert('Успешно', 'Вход выполнен успешно', [
-          { text: 'OK', onPress: () => navigation.navigate('Profile') }
-        ]);
+        const userProfile = resp.data;
+        console.log('User profile data:', userProfile);
+
+        if (userProfile.userData.email === 'admin@gmail.com' && userProfile.userData.username === 'admin') {
+          console.log('Admin user detected, redirecting to AdminDashboard');
+          signIn(userProfile);
+          navigation.navigate('Admin'); 
+        } else {
+          signIn(userProfile); 
+          Alert.alert('Успешно', 'Вход выполнен успешно', [
+            { text: 'OK', onPress: () => navigation.navigate('Profile') }
+          ]);
+        }
       } else {
         Alert.alert('Ошибка', 'Неверный email или пароль');
       }
     } catch (err) {
       console.error('Ошибка при входе:', err);
-      Alert.alert('Ошибка', 'Не удалось подключиться к серверу');
+      if (err.response && err.response.status === 401) {
+        Alert.alert('Ошибка', 'Неверный email или пароль');
+      } else {
+        Alert.alert('Ошибка', 'Не удалось подключиться к серверу');
+      }
     }
   };
 

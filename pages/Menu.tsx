@@ -1,40 +1,43 @@
 import React from 'react';
-import { View, TouchableOpacity, StyleSheet, Image } from 'react-native';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../context/AuthContext';
-import { SafeAreaView } from 'react-native-safe-area-context'; 
+import { useAuth } from '../context/AuthContext'; 
 
 export default function Menu() {
   const navigation = useNavigation();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, userProfile } = useAuth(); 
 
   return (
-    <SafeAreaView style={styles.safeArea}> 
-      <View style={styles.topMenu}>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Home')}>
-          <Ionicons name="home" size={24} color="#bfbfbf" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Search')}>
-          <Ionicons name="search" size={24} color="#bfbfbf" />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Bookmark')}>
-          <Ionicons name="bookmark" size={24} color="#bfbfbf" />
-        </TouchableOpacity>
+    <View style={styles.topMenu}>
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Home')}>
+        <Ionicons name="home" size={24} color="#bfbfbf" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Search')}>
+        <Ionicons name="search" size={24} color="#bfbfbf" />
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Bookmark')}>
+        <Ionicons name="bookmark" size={24} color="#bfbfbf" />
+      </TouchableOpacity>
+
+      {!isAuthenticated || (isAuthenticated && userProfile?.userData?.email !== 'admin@gmail.com') ? (
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate(isAuthenticated ? 'Profile' : 'Register')}>
-          <Ionicons name="person" size={24} color="#bfbfbf" />
+          <Ionicons name={isAuthenticated ? "person" : "person-add"} size={24} color="#bfbfbf" />
         </TouchableOpacity>
-      </View>
-    </SafeAreaView>
+      ) : null}
+
+      {isAuthenticated && userProfile?.userData?.email === 'admin@gmail.com' && (
+        <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Admin')}>
+          <Ionicons name="shield" size={24} color="#bfbfbf" /> 
+        </TouchableOpacity>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    backgroundColor: '#252527', 
-  },
   topMenu: {
     flexDirection: 'row',
     justifyContent: 'space-around',
