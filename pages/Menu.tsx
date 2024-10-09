@@ -11,26 +11,26 @@ export default function Menu() {
   return (
     <View style={styles.topMenu}>
       <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Home')}>
-        <Ionicons name="home" size={24} color="#bfbfbf" />
+        <Ionicons name="home" size={24} color="#564f6f" />
       </TouchableOpacity>
       <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Search')}>
-        <Ionicons name="search" size={24} color="#bfbfbf" />
+        <Ionicons name="search" size={24} color="#564f6f" />
       </TouchableOpacity>
       <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Bookmark')}>
-        <Ionicons name="bookmark" size={24} color="#bfbfbf" />
+        <Ionicons name="bookmark" size={24} color="#564f6f" />
       </TouchableOpacity>
 
       {!isAuthenticated || (isAuthenticated && userProfile?.userData?.email !== 'admin@gmail.com') ? (
         <TouchableOpacity
           style={styles.menuItem}
           onPress={() => navigation.navigate(isAuthenticated ? 'Profile' : 'Register')}>
-          <Ionicons name={isAuthenticated ? "person" : "person-add"} size={24} color="#bfbfbf" />
+          <Ionicons name={isAuthenticated ? "person" : "person-add"} size={24} color="#564f6f" />
         </TouchableOpacity>
       ) : null}
 
       {isAuthenticated && userProfile?.userData?.email === 'admin@gmail.com' && (
         <TouchableOpacity style={styles.menuItem} onPress={() => navigation.navigate('Admin')}>
-          <Ionicons name="shield" size={24} color="#bfbfbf" /> 
+          <Ionicons name="shield" size={24} color="#564f6f" /> 
         </TouchableOpacity>
       )}
     </View>

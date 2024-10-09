@@ -151,15 +151,11 @@ export default function BookmarkScreen() {
     }
   };
 
-  const handleSelectManga = (manga: any) => {
-    navigation.navigate('Manga', { manga });
-  };
-
   const renderBookmark = ({ item }) => {
-    const { chapterTitle, mangaTitle, coverArt, pageIndex } = chapter_details[item.chapter_id] || {};
+    const { chapterTitle, mangaTitle, coverArt, pageIndex, mangaId } = chapter_details[item.chapter_id] || {};
 
     return (
-      <TouchableOpacity onPress={() => handleSelectManga(item.manga_id)}>
+      <TouchableOpacity>
         <View style={styles.bookmark}>
           <Image source={{ uri: coverArt || 'https://via.placeholder.com/100x150' }} style={styles.mangaImg} />
           <View style={styles.textContainer}>

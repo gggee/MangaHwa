@@ -27,7 +27,7 @@ export default function App() {
       <GestureHandlerRootView >
         <AuthProvider>
           <NavigationContainer>
-            <SafeAreaView style={{ flex: 1, backgroundColor: '#252527' }}>
+            <SafeAreaView style={{ flex: 1, backgroundColor: '#d1d7e0' }}>
               <Stack.Navigator 
                 initialRouteName='Home'
                 screenOptions={{ headerShown: false }}
