@@ -16,7 +16,7 @@ export default function HomeScreen() {
     fetchActionAdventureManga(setActionAdventureMangaList, setCoverUrls);
   }, []);
 
-  const handleMangaPress = (manga) => {
+  const handleMangaPress = (manga : any) => {
     navigation.navigate('Manga', { manga });
   };
 
@@ -90,7 +90,7 @@ export default function HomeScreen() {
   );
 }
 
-async function fetchRndManga(setMangaList, setCoverUrls) {
+async function fetchRndManga(setMangaList : any, setCoverUrls : any) {
   try {
     const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=15&offset=${Math.floor(Math.random() * 1000)}`);
     const data = await rnd_resp.json();
@@ -120,7 +120,7 @@ async function fetchRndManga(setMangaList, setCoverUrls) {
   }
 }
 
-async function fetchRndRomanceManga(setMangaList, setCoverUrls) {
+async function fetchRndRomanceManga(setMangaList : any, setCoverUrls : any) {
   try {
     const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=40&offset=${Math.floor(Math.random() * 1000)}`);
     const data = await rnd_resp.json();
@@ -155,9 +155,9 @@ async function fetchRndRomanceManga(setMangaList, setCoverUrls) {
   }
 }
 
-async function fetchActionAdventureManga(setMangaList, setCoverUrls) {
+async function fetchActionAdventureManga(setMangaList : any, setCoverUrls : any) {
   try {
-    const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=40&offset=${Math.floor(Math.random() * 1000)}`);
+    const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=100&offset=${Math.floor(Math.random() * 1000)}`);
     const data = await rnd_resp.json();
 
     if (data.data && data.data.length > 0) {
@@ -190,7 +190,7 @@ async function fetchActionAdventureManga(setMangaList, setCoverUrls) {
   }
 }
 
-async function fetchCoverArt(id) {
+async function fetchCoverArt(id : any) {
   const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
   const data = await resp.json();
   if (data.data) {
@@ -216,30 +216,28 @@ const styles = StyleSheet.create({
   },
   mangaScroll: {
     flexDirection: 'row',
+    paddingBottom: 8,
+    height: 210
   },
   mangaItem: {
     marginRight: 10,
-    backgroundColor: '#4c495d',
-    borderRadius: 10,
     padding: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 2,
-    height: 200
+    height: 200,
   },
   mangaImg: {
     width: 100,
     height: 150,
-    borderRadius: 8,
+    borderRadius: 5,
+    borderColor: '#564f6f',
+    borderWidth: 1
   },
   mangaTitle: {
     marginTop: 5,
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#d1d7e0',
+    color: '#4c495d',
     width: 100,
+    textAlign: 'center',
   },
   sectionTitle: {
     fontSize: 18,

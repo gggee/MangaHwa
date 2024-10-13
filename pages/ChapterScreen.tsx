@@ -23,7 +23,7 @@ export default function ChapterScreen() {
     fetchChapters();
   }, [manga]);
 
-  const handleSelectChapter = async (chapter) => {
+  const handleSelectChapter = async (chapter : any) => {
     try {
         const pages = await getChapterPages(chapter.id);
         navigation.navigate('OnePage', { chapter, pages, cur_page_index: 0, manga }); 
@@ -46,7 +46,7 @@ export default function ChapterScreen() {
         <Button title="Back to manga" onPress={() => navigation.goBack()} />
         <Text style={styles.header}>Chapters:</Text>
         {load ? (
-          <Text style={styles.loading}>Пожалуйста подождите, главы загружаются</Text>
+          <Text style={styles.loading}>Load...</Text>
         ) : (
           <FlatList
             data={chapters}

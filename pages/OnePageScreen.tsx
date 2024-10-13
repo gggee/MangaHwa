@@ -9,10 +9,15 @@ import { PanResponder, Animated as RNAnimated } from 'react-native';
 import Modal from 'react-native-modal';
 import ImageViewer from 'react-native-image-zoom-viewer';
 
-const fetchComments = async (mangaId, chapterId, curPageIndex, setComments, setLoading) => {
+const fetchComments = async (
+  mangaId : any, 
+  chapterId : any, 
+  curPageIndex : any, 
+  setComments : any, 
+  setLoading : any) => {
   try {
     setLoading(true);
-    const resp = await axios.get(`http://192.168.0.101:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
+    const resp = await axios.get(`http://192.168.0.103:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
     setComments(resp.data);
   } catch (err) {
     console.error('Error fetching comments:', err.message);
@@ -21,11 +26,19 @@ const fetchComments = async (mangaId, chapterId, curPageIndex, setComments, setL
   }
 };
 
-const addComment = async (userProfile, mangaId, chapterId, curPageIndex, commentText, setComments, setCommentText, setLoadingComment) => {
+const addComment = async (
+  userProfile : any, 
+  mangaId : any, 
+  chapterId : any, 
+  curPageIndex : any, 
+  commentText : any, 
+  setComments : any, 
+  setCommentText : any, 
+  setLoadingComment : any) => {
   if (!commentText.trim()) return;
   try {
     setLoadingComment(true);
-    const resp = await axios.post('http://192.168.0.101:3001/comments', {
+    const resp = await axios.post('http://192.168.0.103:3001/comments', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -45,7 +58,7 @@ const addComment = async (userProfile, mangaId, chapterId, curPageIndex, comment
   }
 };
 
-const deleteComment = async (commentId, userProfile, setComments) => {
+const deleteComment = async (commentId : any, userProfile : any, setComments : any) => {
   Alert.alert(
     "Delete comment?",
     "Are you sure you want to delete this comment?",
@@ -53,7 +66,7 @@ const deleteComment = async (commentId, userProfile, setComments) => {
       { text: "Cancel", style: "cancel" },
       { text: "Delete", onPress: async () => {
           try {
-            await axios.delete(`http://192.168.0.101:3001/comments/${commentId}`);
+            await axios.delete(`http://192.168.0.103:3001/comments/${commentId}`);
             setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
           } catch (err) {
             console.error('Error deleting comment:', err.message);
@@ -63,9 +76,9 @@ const deleteComment = async (commentId, userProfile, setComments) => {
   );
 };
 
-const addBookmark = async (userProfile, mangaId, chapterId, curPageIndex) => {
+const addBookmark = async (userProfile : any, mangaId : any, chapterId : any, curPageIndex : any) => {
   try {
-    await axios.post('http://192.168.0.101:3001/bookmarks', {
+    await axios.post('http://192.168.0.103:3001/bookmarks', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -77,9 +90,9 @@ const addBookmark = async (userProfile, mangaId, chapterId, curPageIndex) => {
   }
 };
 
-const fetchBookmarks = async (userId, setBookmarks) => {
+const fetchBookmarks = async (userId : any, setBookmarks : any) => {
   try {
-    const resp = await axios.get(`http://192.168.0.101:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.103:3001/bookmarks/${userId}`);
     setBookmarks(resp.data);
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);

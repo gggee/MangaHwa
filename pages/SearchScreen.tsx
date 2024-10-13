@@ -25,7 +25,7 @@ export default function SearchScreen({ route }) {
       const manga_res = await searchMangaByTitle(title);
       setMangaList(manga_res);
     
-      const cover_promis = manga_res.map(async (manga) => {
+      const cover_promis = manga_res.map(async (manga : any) => {
         const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
@@ -71,11 +71,11 @@ export default function SearchScreen({ route }) {
             value={title}
             onChangeText={setTitle}
           />
-          <TouchableOpacity style={styles.button} onPress={handleSearch}>
-            <Text style={styles.buttonText}>Search</Text>
-          </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Genres', { selectedGenres })}>
             <Text style={styles.buttonText}>Genres</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.button} onPress={handleSearch}>
+            <Text style={styles.buttonText}>Search</Text>
           </TouchableOpacity>
         </View>
         <FlatList
@@ -90,7 +90,7 @@ export default function SearchScreen({ route }) {
   );
 }
 
-async function fetchRndManga(setMangaList, setCoverUrls) {
+async function fetchRndManga(setMangaList : any, setCoverUrls : any) {
   try {
     const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=40&offset=${Math.floor(Math.random() * 1000)}`);
     const data = await rnd_resp.json();
@@ -98,7 +98,7 @@ async function fetchRndManga(setMangaList, setCoverUrls) {
     if (data.data && data.data.length > 0) {
       setMangaList(data.data);
 
-      const cover_promis = data.data.map(async (manga) => {
+      const cover_promis = data.data.map(async (manga : any) => {
         const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
@@ -120,9 +120,9 @@ async function fetchRndManga(setMangaList, setCoverUrls) {
   }
 }
 
-async function fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls) {
+async function fetchMangaByGenres(selectedGenres : any, setMangaList : any, setCoverUrls : any) {
   try {
-    const resp = await fetch('http://192.168.0.101:3001/search-by-genres', {
+    const resp = await fetch('http://192.168.0.103:3001/search-by-genres', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -133,7 +133,7 @@ async function fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls) {
     const data = await resp.json();
     if (resp.ok && data.length > 0) {
       setMangaList(data);
-      const cover_promis = data.map(async (manga) => {
+      const cover_promis = data.map(async (manga : any) => {
         const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
@@ -155,7 +155,7 @@ async function fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls) {
   }
 }
 
-async function searchMangaByTitle(title) {
+async function searchMangaByTitle(title : any) {
   const resp = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}&limit=30`);
   const data = await resp.json();
   if (data.data && data.data.length > 0) {
@@ -165,7 +165,7 @@ async function searchMangaByTitle(title) {
   }
 }
 
-async function fetchCoverArt(id) {
+async function fetchCoverArt(id : any) {
   const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
   const data = await resp.json();
   if (data.data) {
@@ -216,8 +216,8 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     paddingHorizontal: 8,
     backgroundColor: '#4c495d', 
-    color: '#4c495d', 
-    borderRadius: 5,
+    color: '#d1d7e0', 
+    borderRadius: 8,
     marginRight: 8,
     fontSize: 16,
   },
@@ -225,17 +225,14 @@ const styles = StyleSheet.create({
     flex: 1,
     margin: 8,
     alignItems: 'center',
-    shadowColor: '#2d283e', 
-    shadowOffset: { width: 2, height: 3 }, 
-    shadowOpacity: 0.5, 
-    shadowRadius: 3, 
-    elevation: 4,
   },
   cover_img: {
     width: 100,
     height: 150,
     marginBottom: 8,
-    borderRadius: 8, 
+    borderRadius: 8,
+    borderColor: '#564f6f',
+    borderWidth: 1
   },
   manga_title: {
     textAlign: 'center',

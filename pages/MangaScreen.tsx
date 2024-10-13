@@ -31,7 +31,7 @@ export default function MangaScreen() {
     }
 
     try {
-      const response = await fetch('http://192.168.0.101:3001/collection', {
+      const response = await fetch('http://192.168.0.103:3001/collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,9 +54,9 @@ export default function MangaScreen() {
     }
   };
 
-  const sendMangaToServer = async (mangaData) => {
+  const sendMangaToServer = async (mangaData : any) => {
     try {
-      const response = await fetch('http://192.168.0.101:3001/add-manga', {
+      const response = await fetch('http://192.168.0.103:3001/add-manga', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -178,7 +178,7 @@ async function fetchDetailsAndSend(mangaId, setAuthor, setArtist, setGenres, set
   }
 }
 
-async function getMangaDetails(mangaId) {
+async function getMangaDetails(mangaId : any) {
   const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
   const data = await resp.json();
 
@@ -199,7 +199,7 @@ async function getMangaDetails(mangaId) {
   }
 }
 
-async function fetchAuthorOrArtist(id) {
+async function fetchAuthorOrArtist(id : any) {
   const resp = await fetch(`https://api.mangadex.org/author/${id}`);
   const data = await resp.json();
   if (data.data) {
@@ -209,7 +209,7 @@ async function fetchAuthorOrArtist(id) {
   }
 }
 
-async function fetchCoverArt(id) {
+async function fetchCoverArt(id : any) {
   const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
   const data = await resp.json();
   if (data.data) {

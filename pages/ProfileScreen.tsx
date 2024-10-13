@@ -84,7 +84,7 @@ export default function ProfileScreen() {
 
 const fetchMangaCollections = async (userId, setMangaData, statusMapping) => {
   try {
-    const resp = await fetch(`http://192.168.0.101:3001/user-collection/${userId}`);
+    const resp = await fetch(`http://192.168.0.103:3001/user-collection/${userId}`);
     const data = await resp.json();
     const categorizedManga = {
       read: [],

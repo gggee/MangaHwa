@@ -24,13 +24,16 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <SafeAreaProvider> 
-      <GestureHandlerRootView >
+      <GestureHandlerRootView>
         <AuthProvider>
           <NavigationContainer>
             <SafeAreaView style={{ flex: 1, backgroundColor: '#d1d7e0' }}>
               <Stack.Navigator 
                 initialRouteName='Home'
-                screenOptions={{ headerShown: false }}
+                screenOptions={{ 
+                  headerShown: false, 
+                  gestureEnabled: false 
+                }}
               >
                 <Stack.Screen name='Home' component={HomeScreen} />
                 <Stack.Screen name='Profile' component={ProfileScreen} />

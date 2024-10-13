@@ -19,7 +19,7 @@ export default function SignInScreen() {
 
     try {
       const passwHash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-      const resp = await axios.post('http://192.168.0.101:3001/signin', {
+      const resp = await axios.post('http://192.168.0.103:3001/signin', {
         email,
         password_hash: passwHash,
       });
@@ -27,15 +27,16 @@ export default function SignInScreen() {
       if (resp.status === 200) {
         const userProfile = resp.data;
         console.log('User profile data:', userProfile);
-
-        if (userProfile.userData.email === 'admin@gmail.com' && userProfile.userData.username === 'admin') {
-          console.log('Admin user detected, redirecting to AdminDashboard');
+        
+        if (userProfile.isAdmin) {
           signIn(userProfile);
-          navigation.navigate('Admin'); 
+          Alert.alert('Успешно', 'Вход выполнен как администратор!', [
+            { text: 'OK', onPress: () => navigation.navigate('Admin') },
+          ]);
         } else {
-          signIn(userProfile); 
-          Alert.alert('Успешно', 'Вход выполнен успешно', [
-            { text: 'OK', onPress: () => navigation.navigate('Profile') }
+          signIn(userProfile);
+          Alert.alert('Успешно', 'Вход выполнен успешно!', [
+            { text: 'OK', onPress: () => navigation.navigate('Profile') },
           ]);
         }
       } else {
@@ -70,7 +71,7 @@ export default function SignInScreen() {
           onChangeText={setPassword}
         />
         <Button title="Войти" onPress={handleSignIn} />
-        <Button title="Зарегистрироваться" onPress={() => navigation.navigate('Register')}/>
+        <Button title="Зарегистрироваться" onPress={() => navigation.navigate('Register')} />
       </View>
     </SafeAreaView>
   );

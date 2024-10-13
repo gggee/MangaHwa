@@ -12,6 +12,7 @@ const CommentList = ({ comments, onDelete }) => {
         renderItem={({ item }) => (
           <View style={styles.commentItem}>
             <Text>User: {item.username}</Text>
+            <Text>ID: {item.id}</Text>
             <Text>Manga: {item.title}</Text>
             <Text>Comment: {item.comment_text}</Text>
             <Button title="Delete" onPress={() => {
@@ -36,7 +37,7 @@ const BanUserForm = () => {
 
   const handleBanUser = async () => {
     try {
-      const resp = await axios.post('http://192.168.0.101:3001/admin/ban-user', {
+      const resp = await axios.post('http://192.168.0.103:3001/admin/ban-user', {
         user_id: userId,
         ban_duration: banDuration,
       });
@@ -84,20 +85,20 @@ export default function AdminDashboard() {
       const checkAdmin = () => {
         if (!userProfile) {
           navigation.navigate('SignIn');
-        } else if (userProfile.userData.email !== 'admin@gmail.com' || userProfile.userData.username !== 'admin') {
+        } else if (userProfile.email !== 'admin@gmail.com' || userProfile.username !== 'admin') {
           navigation.navigate('Profile'); 
         } else {
-          fetchComments();
+          fetchComments(); 
         }
       };
 
       checkAdmin();
-    }, [userProfile])
+    }, [userProfile, navigation]) 
   );
 
   const fetchComments = async () => {
     try {
-      const resp = await axios.get('http://192.168.0.101:3001/admin/comments');
+      const resp = await axios.get('http://192.168.0.103:3001/admin/comments');
       setComments(resp.data);
     } catch (error) {
       console.error('Error while retrieving comments:', error);
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
 
   const handleDeleteComment = async (commentId) => {
     try {
-      await axios.delete(`http://192.168.0.101:3001/admin/comments/${commentId}`);
+      await axios.delete(`http://192.168.0.103:3001/admin/comments/${commentId}`);
       setComments(comments.filter(comment => comment.id !== commentId));
     } catch (error) {
       console.error('Error deleting comment:', error);
@@ -122,7 +123,7 @@ export default function AdminDashboard() {
 
   return (
     <View style={styles.container}>
-      {userProfile ? (
+      {userProfile && userProfile.email === 'admin@gmail.com' && userProfile.username === 'admin' ? (
         <>
           <Text style={styles.header}>Admin panel</Text>
           <Button title="Log out" onPress={handleLogout} />
@@ -131,7 +132,7 @@ export default function AdminDashboard() {
           <BanUserForm />
         </>
       ) : (
-        <Text>Load...</Text>
+        <Text>Loading...</Text> 
       )}
     </View>
   );

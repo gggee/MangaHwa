@@ -4,9 +4,9 @@ import axios from 'axios';
 import { useNavigation } from '@react-navigation/native'; 
 import { useAuth } from '../context/AuthContext';
 
-const fetchBookmarks = async (userId) => {
+const fetchBookmarks = async (userId : any) => {
   try {
-    const resp = await axios.get(`http://192.168.0.101:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.103:3001/bookmarks/${userId}`);
     return resp.data; 
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);
@@ -14,7 +14,7 @@ const fetchBookmarks = async (userId) => {
   }
 };
 
-const fetchCoverArt = async (mangaId) => {
+const fetchCoverArt = async (mangaId : any) => {
   try {
     const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
     const data = await resp.json();
@@ -34,7 +34,7 @@ const fetchCoverArt = async (mangaId) => {
   }
 };
 
-const fetchChapterDetails = async (chapterId) => {
+const fetchChapterDetails = async (chapterId : any) => {
   try {
     const resp = await fetch(`https://api.mangadex.org/chapter/${chapterId}`);
     const data = await resp.json();
@@ -46,7 +46,7 @@ const fetchChapterDetails = async (chapterId) => {
   }
 };
 
-const fetchChapterTitle = async (chapterId) => {
+const fetchChapterTitle = async (chapterId : any) => {
   try {
     const resp = await fetch(`https://api.mangadex.org/chapter/${chapterId}`);
     const data = await resp.json();
@@ -57,7 +57,7 @@ const fetchChapterTitle = async (chapterId) => {
   }
 }; 
 
-const fetchMangaTitle = async (mangaId) => {
+const fetchMangaTitle = async (mangaId : any) => {
   try {
     const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
     const data = await resp.json();
@@ -68,9 +68,9 @@ const fetchMangaTitle = async (mangaId) => {
   }
 };
 
-const deleteBookmark = async (userId, chapterId) => {
+const deleteBookmark = async (userId : any, chapterId : any) => {
   try {
-    await axios.delete(`http://192.168.0.101:3001/bookmarks/${userId}/${chapterId}`);
+    await axios.delete(`http://192.168.0.103:3001/bookmarks/${userId}/${chapterId}`);
     return true;
   } catch (err) {
     console.error('Error deleting bookmark:', err.message);
@@ -123,7 +123,7 @@ export default function BookmarkScreen() {
     }
   }, [bookmarks]);
 
-  const handleDeleteBookmark = async (chapterId) => {
+  const handleDeleteBookmark = async (chapterId : any) => {
     const temp = await new Promise((resolve) => {
       Alert.alert(
         "Delete bookmark?",
