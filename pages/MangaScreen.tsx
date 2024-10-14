@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Image, StyleSheet, SafeAreaView, Button, ScrollView, Alert, Modal } from 'react-native';
+import { View, Text, Image, StyleSheet, SafeAreaView, Button, ScrollView, Alert, Modal, TouchableOpacity } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { RadioButton } from 'react-native-paper'; 
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../context/AuthContext';
 
 export default function MangaScreen() {
@@ -16,6 +17,12 @@ export default function MangaScreen() {
   const [modalVisible, setModalVisible] = useState(false); 
   const [modalAddVisible, setModalAddVisible] = useState(false);
   const [collectionStatus, setCollectionStatus] = useState('Прочитано'); 
+  const [isExpanded, setIsExpanded] = useState(false);
+  const description = manga.attributes.description.en;
+
+  const toggleDescription = () => {
+    setIsExpanded(!isExpanded);
+  };
 
   useEffect(() => {
     const fetchDetails = async () => {
@@ -76,22 +83,80 @@ export default function MangaScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.block}>
+      <View style={styles.img_block}>
+          {coverUrl && (
+            <Image
+              source={{ uri: coverUrl }}
+              style={styles.background_img}
+            />
+          )}
+          {coverUrl && (
+            <Image
+              source={{ uri: coverUrl }}
+              style={styles.cover_img}
+            />
+          )}
+      </View>
+      <View style={styles.textContainer}>
         <Text style={styles.header}>{manga.attributes.title.en}</Text>
-        {coverUrl && (
-          <Image
-            source={{ uri: coverUrl }}
-            style={styles.cover_img}
-          />
-        )}
-        <Text style={styles.sub_header}>Genres: {genres.join(', ')}</Text>
-        <Text style={styles.sub_header}>Status: {manga.attributes.status || 'Unknown'}</Text>
-        <Text style={styles.sub_header}>Chapters: {manga.attributes.chapter_count}</Text>
-        <Text style={styles.descrip}>{manga.attributes.description.en}</Text>
-        <Text style={styles.sub_header}>Author: {author || 'Unknown'}</Text>
-        <Text style={styles.sub_header}>Artist: {artist || 'Unknown'}</Text>
-        <Button title="View chapters" onPress={() => navigation.navigate('Chapter', { manga })} />
-        <Button title="Add to Collection" onPress={() => setModalAddVisible(true)} />
-        <Button title="Back to search" onPress={() => navigation.goBack()} />
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => navigation.navigate('Chapter', { manga })}
+          >
+            <Ionicons name="book-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Chapters</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.button}
+            onPress={() => setModalAddVisible(true)}
+          >
+            <Ionicons name="add-circle-outline" size={20} color="#fff" />
+            <Text style={styles.buttonText}>Collection</Text>
+          </TouchableOpacity>
+        </View>
+  
+        <View style={styles.infoContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+            <View style={styles.infoBlock}>
+              <View style={styles.infoItem}>
+                <Text style={styles.label}>Status</Text>
+                <Text style={styles.infoText}>{manga.attributes.status || 'Unknown'}</Text>
+              </View>
+              <View style={styles.separator} />
+              <View style={styles.infoItem}>
+                <Text style={styles.label}>Author</Text>
+                <Text style={styles.infoText}>{author || 'Unknown'}</Text>
+              </View>
+              <View style={styles.separator} />
+              <View style={styles.infoItem}>
+                <Text style={styles.label}>Artist</Text>
+                <Text style={styles.infoText}>{artist || 'Unknown'}</Text>
+              </View>
+            </View>
+          </ScrollView>
+        </View>
+
+        <Text style={styles.descrip}>
+          {isExpanded ? description : `${description.slice(0, 200)}...`}
+        </Text>
+        <TouchableOpacity onPress={toggleDescription}>
+          <Text style={styles.readMore}>
+            {isExpanded ? 'Hide' : 'Read more...'}
+          </Text>
+        </TouchableOpacity>
+
+        <View style={styles.genresContainer}>
+          {genres.map((genre, index) => (
+            <View key={index} style={styles.genreItem}>
+              <Text style={styles.genreText}>{genre}</Text>
+            </View>
+          ))}
+        </View>
+      </View>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+          <Ionicons name="arrow-back-outline" size={24} color="#564f6f" />
+      </TouchableOpacity>
       </ScrollView>
 
       <Modal
@@ -104,11 +169,12 @@ export default function MangaScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Manga successfully added to collection!</Text>
-            <Button
-              title="Close"
+            <Text style={styles.modalText}>Manga successfully added</Text>
+            <TouchableOpacity
               onPress={() => setModalVisible(!modalVisible)}
-            />
+              >
+              <Text style={styles.closeButton}>Close</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -123,7 +189,7 @@ export default function MangaScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Выберите статус для добавления в коллекцию</Text>
+            <Text style={styles.modalText}>Выберите статус для коллекцию</Text>
             <RadioButton.Group onValueChange={value => setCollectionStatus(value)} value={collectionStatus}>
               <View style={styles.radioContainer}>
                 <RadioButton value="Прочитано" />
@@ -146,8 +212,20 @@ export default function MangaScreen() {
                 <Text>Любимое</Text>
               </View>
             </RadioButton.Group>
-            <Button title="Add to collection" onPress={addToCollection} />
-            <Button title="Cancel" onPress={() => setModalAddVisible(!modalAddVisible)} />
+
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={addToCollection}
+              >
+              <Ionicons name="add-circle-outline" size={20} color="#fff" />
+              <Text style={styles.modalButtonText_2}>Collection</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.modalButton}
+              onPress={() => setModalAddVisible(!modalAddVisible)}
+              >
+              <Text style={styles.modalButtonText_2}>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -155,7 +233,14 @@ export default function MangaScreen() {
   );
 }
 
-async function fetchDetailsAndSend(mangaId, setAuthor, setArtist, setGenres, setCoverUrl, sendMangaToServer, manga) {
+async function fetchDetailsAndSend(
+  mangaId : any, 
+  setAuthor : any, 
+  setArtist : any, 
+  setGenres : any, 
+  setCoverUrl : any, 
+  sendMangaToServer : any, 
+  manga : any) {
   try {
     const { author, artist, genres, coverUrl, status } = await getMangaDetails(mangaId);
     setAuthor(author);
@@ -231,32 +316,54 @@ async function fetchCoverArt(id : any) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    paddingHorizontal: 16,
+    flex: 1, 
+    position: 'relative',
     paddingTop: 40,
     paddingBottom: 20,
+    backgroundColor: '#d1d7e0',
   },
   block: {
     flexGrow: 1,
   },
+  img_block: {
+    alignItems: 'center',
+    position: 'relative',  
+  },
   header: {
     fontSize: 24,
     fontWeight: 'bold',
-    marginBottom: 10,
+    marginBottom: 5,
+    textAlign: 'center', 
+    color: '#4c495d',
   },
   sub_header: {
     fontSize: 18,
     marginVertical: 5,
+    color: '#26242e'
   },
   descrip: {
     fontSize: 16,
-    marginBottom: 20,
+    marginBottom: 5,
+    marginTop: 10,
+    color: '#26242e'
+  },
+  background_img: {
+    width: '100%',
+    height: 350,
+    opacity: 0.3,
+    position: 'absolute',  
+    top: 0,                
+    left: 0,           
   },
   cover_img: {
-    width: '100%',
+    width: '60%',
     height: 300,
     borderRadius: 15,
-    marginBottom: 20,
+    marginBottom: 25,
+    marginTop: 15,
+    alignContent: 'center',
+    position: 'relative',  
+    zIndex: 1,           
   },
   modalOverlay: {
     flex: 1,
@@ -265,27 +372,126 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
   modalView: {
-    width: '80%',
-    backgroundColor: 'white',
+    width: '75%',
+    backgroundColor: '#fff', 
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
   },
   modalText: {
     marginBottom: 15,
     textAlign: 'center',
+    color: '#222629',
+    fontSize: 16,
+  },
+  textContainer:{
+    marginTop: 10,
+    padding: 10, 
+  },
+  infoContainer:{
+    alignItems: 'center'
+  },
+  infoBlock: {
+    flexDirection: 'row', 
+    alignItems: 'center', 
+  },
+  scrollContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  infoItem: {
+    marginHorizontal: 10,
+    alignItems: 'center', 
+    padding: 5,
+  },
+  label: {
+    fontSize: 15, 
+  },
+  infoText: {
+    fontSize: 12, 
+    marginTop: 5, 
+  },
+  separator: {
+    width: 1,
+    backgroundColor: 'black',
+    height: 30, 
+    marginHorizontal: 10,
+  },
+  genresContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap', 
+    marginTop: 10,
+  },
+  genreItem: {
+    borderWidth: 1,          
+    borderColor: '#9590b0',  
+    borderRadius: 15,        
+    padding: 8,             
+    margin: 5,               
+    backgroundColor: '#9590b0', 
+  },
+  genreText: {
+    fontSize: 14, 
+    color: '#e6eaf0', 
+  },
+  readMore: {
+    color: '#6f6b88',
+    marginBottom: 7,
+    textDecorationLine: 'underline', 
+  },
+  backButton: {
+    position: 'absolute',
+    top: 7, 
+    left: 15, 
+    zIndex: 1,
+    backgroundColor: 'white', 
+    borderRadius: 20,
+    padding: 10, 
+    elevation: 2, 
   },
   radioContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 5,
+    marginVertical: 3,
   },
+  buttonContainer:{
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-evenly',
+    marginTop: 5,
+    marginBottom: 5
+  },
+  button: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6f6b88', 
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    borderRadius: 10,
+    marginRight: 10,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    marginLeft: 5, 
+  },
+  modalButtonText_2: {
+    color: '#fff',
+    fontSize: 16,
+    margin: 5
+  },
+  modalButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#6f6b88', 
+    paddingVertical: 5,
+    paddingHorizontal: 10,
+    borderRadius: 10,
+    margin: 5
+  },
+  closeButton: {
+    color: '#6f6b88',
+    fontSize: 16
+  }
 });

@@ -13,7 +13,6 @@ import MangaScreen from './pages/MangaScreen';
 import ChapterScreen from './pages/ChapterScreen';
 import PageScreen from './pages/PageScreen';
 import OnePageScreen from './pages/OnePageScreen';
-import GenreThemeScreen from './pages/GenreScreen';
 import BookmarkScreen from './pages/BookmarkScreen';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context'; 
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -44,7 +43,6 @@ export default function App() {
                 <Stack.Screen name='Chapter' component={ChapterScreen} />
                 <Stack.Screen name='Page' component={PageScreen} />
                 <Stack.Screen name='OnePage' component={OnePageScreen}/>
-                <Stack.Screen name='Genres' component={GenreThemeScreen}/>
                 <Stack.Screen name='Bookmark' component={BookmarkScreen}/>
                 <Stack.Screen name='Admin' component={AdminDashboard}/>
               </Stack.Navigator>

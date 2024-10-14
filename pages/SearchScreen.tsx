@@ -1,20 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image } from 'react-native';
+import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+
+const availableGenres = [
+  'Romance', 'Drama', 'Fantasy', 'Action', 'Comedy',
+  'Adventure', 'Horror', 'Mystery', 'Sci-Fi', 'Slice of Life',
+];
 
 export default function SearchScreen({ route }) {
   const [title, setTitle] = useState('');
   const [manga_list, setMangaList] = useState([]);
   const [coverUrls, setCoverUrls] = useState({});
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedGenres, setSelectedGenres] = useState([]);
   const navigation = useNavigation();
-  const { selectedGenres, mangaList } = route.params || {};
 
   useEffect(() => {
-    const { mangaList, selectedGenres } = navigation.getState().routes[navigation.getState().index].params || {};
+    const { mangaList } = route.params || {};
     if (mangaList) {
       setMangaList(mangaList);
-    } else if (selectedGenres) {
-      fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls);
     } else {
       fetchRndManga(setMangaList, setCoverUrls);
     }
@@ -24,9 +28,9 @@ export default function SearchScreen({ route }) {
     try {
       const manga_res = await searchMangaByTitle(title);
       setMangaList(manga_res);
-    
-      const cover_promis = manga_res.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
+
+      const cover_promises = manga_res.map(async (manga : any) => {
+        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };
@@ -34,22 +38,22 @@ export default function SearchScreen({ route }) {
         return { id: manga.id, url: '' };
       });
 
-      const cover_url_arr = await Promise.all(cover_promis);
+      const cover_url_arr = await Promise.all(cover_promises);
       setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
         temp[id] = url;
         return temp;
-      }, {} as Record<string, string>));
+      }, {}));
     } catch (err) {
       console.error('Error:', err.message);
     }
   };
 
-  const handleSelectManga = (manga: any) => {
+  const handleSelectManga = (manga  : any) => {
     navigation.navigate('Manga', { manga });
   };
 
-  const renderMangaItem = ({ item }: { item: any }) => {
-    const cover_img_url = coverUrls[item.id] || 'https://via.placeholder.com/100x150';
+  const renderMangaItem = ({ item }) => {
+    const cover_img_url = coverUrls[item.id] || 'https://via.placeholder.com/100x150/FFFFFF/000000';
     const mangaTitle = item.attributes?.title?.en || 'Unknown title'; 
     return (
       <TouchableOpacity onPress={() => handleSelectManga(item)} style={styles.manga_block}>
@@ -57,6 +61,19 @@ export default function SearchScreen({ route }) {
         <Text style={styles.manga_title} numberOfLines={2} ellipsizeMode="tail">{mangaTitle}</Text> 
       </TouchableOpacity>
     );
+  };
+
+  const toggleGenre = (genre  : any) => {
+    if (selectedGenres.includes(genre)) {
+      setSelectedGenres(selectedGenres.filter(g => g !== genre));
+    } else {
+      setSelectedGenres([...selectedGenres, genre]);
+    }
+  };
+
+  const applyFilters = () => {
+    setModalVisible(false);
+    fetchMangaByGenres(selectedGenres, setMangaList, setCoverUrls);
   };
 
   return (
@@ -71,7 +88,7 @@ export default function SearchScreen({ route }) {
             value={title}
             onChangeText={setTitle}
           />
-          <TouchableOpacity style={styles.button} onPress={() => navigation.navigate('Genres', { selectedGenres })}>
+          <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
             <Text style={styles.buttonText}>Genres</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={handleSearch}>
@@ -86,94 +103,46 @@ export default function SearchScreen({ route }) {
           columnWrapperStyle={styles.row}
         />
       </View>
+
+      <Modal
+        transparent={true}
+        animationType="slide"
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+          <View style={styles.modalContainer}>
+            <TouchableWithoutFeedback>
+              <View style={styles.modalContent}>
+                <Text style={styles.modalHeader}>Genres</Text>
+                {availableGenres.map((genre) => (
+                  <TouchableOpacity key={genre} onPress={() => toggleGenre(genre)} style={styles.genreItem}>
+                    <Text style={[styles.genreText, selectedGenres.includes(genre) && styles.selectedGenre]}>
+                      {genre}
+                    </Text>
+                  </TouchableOpacity>
+                ))}
+                <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+                  <Text style={styles.buttonText}>Apply</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableWithoutFeedback>
+          </View>
+        </TouchableWithoutFeedback>
+      </Modal>
     </SafeAreaView>
   );
 }
 
-async function fetchRndManga(setMangaList : any, setCoverUrls : any) {
-  try {
-    const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=40&offset=${Math.floor(Math.random() * 1000)}`);
-    const data = await rnd_resp.json();
-
-    if (data.data && data.data.length > 0) {
-      setMangaList(data.data);
-
-      const cover_promis = data.data.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
-        if (cover_art) {
-          const coverUrl = await fetchCoverArt(cover_art.id);
-          return { id: manga.id, url: coverUrl };
-        }
-        return { id: manga.id, url: '' };
-      });
-
-      const cover_url_arr = await Promise.all(cover_promis);
-      setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
-        temp[id] = url;
-        return temp;
-      }, {} as Record<string, string>));
-    } else {
-      throw new Error('No manga found');
-    }
-  } catch (err) {
-    console.error('Error:', err.message);
-  }
-}
-
-async function fetchMangaByGenres(selectedGenres : any, setMangaList : any, setCoverUrls : any) {
-  try {
-    const resp = await fetch('http://192.168.0.103:3001/search-by-genres', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ genres: selectedGenres }),
-    });
-
-    const data = await resp.json();
-    if (resp.ok && data.length > 0) {
-      setMangaList(data);
-      const cover_promis = data.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
-        if (cover_art) {
-          const coverUrl = await fetchCoverArt(cover_art.id);
-          return { id: manga.id, url: coverUrl };
-        }
-        return { id: manga.id, url: '' };
-      });
-
-      const cover_url_arr = await Promise.all(cover_promis);
-      setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
-        temp[id] = url;
-        return temp;
-      }, {} as Record<string, string>));
-    } else {
-      throw new Error('No manga found with the selected genres');
-    }
-  } catch (err) {
-    console.error('Error:', err.message);
-  }
-}
-
-async function searchMangaByTitle(title : any) {
-  const resp = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}&limit=30`);
-  const data = await resp.json();
-  if (data.data && data.data.length > 0) {
-    return data.data;
-  } else {
-    throw new Error('Манга не найдена');
-  }
-}
-
-async function fetchCoverArt(id : any) {
+const fetchCoverArt = async (id : any) => {
   const resp = await fetch(`https://api.mangadex.org/cover/${id}`);
   const data = await resp.json();
   if (data.data) {
     const manga_rel_ship = data.data.relationships.find(
-      (rel: any) => rel.type === 'manga'
+      (rel) => rel.type === 'manga'
     );
     if (!manga_rel_ship) {
-      throw new Error('Манга не найдена');
+      throw new Error('Manga not found');
     }
 
     const mangaId = manga_rel_ship.id; 
@@ -181,9 +150,84 @@ async function fetchCoverArt(id : any) {
     const coverUrl = `https://uploads.mangadex.org/covers/${mangaId}/${fileName}.256.jpg`;
     return coverUrl;
   } else {
-    throw new Error('Обложка не найдена');
+    throw new Error('Cover not found');
   }
-}
+};
+
+const searchMangaByTitle = async (title  : any) => {
+  const resp = await fetch(`https://api.mangadex.org/manga?title=${encodeURIComponent(title)}&limit=30`);
+  const data = await resp.json();
+  if (data.data && data.data.length > 0) {
+    return data.data;
+  } else {
+    throw new Error('Мanga not found');
+  }
+};
+
+const fetchRndManga = async (setMangaList : any, setCoverUrls : any) => {
+  try {
+    const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=60&offset=${Math.floor(Math.random() * 1000)}`);
+    const data = await rnd_resp.json();
+
+    if (data.data && data.data.length > 0) {
+      setMangaList(data.data);
+
+      const cover_promis = data.data.map(async (manga : any) => {
+        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+        if (cover_art) {
+          const coverUrl = await fetchCoverArt(cover_art.id);
+          return { id: manga.id, url: coverUrl };
+        }
+        return { id: manga.id, url: '' };
+      });
+
+      const cover_url_arr = await Promise.all(cover_promis);
+      setCoverUrls(cover_url_arr.reduce((temp, { id, url }) => {
+        temp[id] = url;
+        return temp;
+      }, {}));
+    } else {
+      throw new Error('No manga found');
+    }
+  } catch (err) {
+    console.error('Error:', err.message);
+  }
+};
+
+const fetchMangaByGenres = async (selectedGenres : any, setMangaList : any, setCoverUrls : any) => {
+  try {
+    const rnd_resp = await fetch(`https://api.mangadex.org/manga?limit=100&offset=${Math.floor(Math.random() * 1000)}`);
+    const data = await rnd_resp.json();
+
+    if (data.data && data.data.length > 0) {
+      const filteredMangas = data.data.filter(manga => {
+        const genres = manga.attributes.tags.map(tag => tag.attributes.name.en);
+        return selectedGenres.some(genre => genres.includes(genre));
+      });
+
+      setMangaList(filteredMangas);
+
+      const cover_promises = filteredMangas.map(async (manga : any) => {
+        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+        if (cover_art) {
+          const coverUrl = await fetchCoverArt(cover_art.id);
+          return { id: manga.id, url: coverUrl };
+        }
+        return { id: manga.id, url: '' };
+      });
+
+      const cover_url_arr = await Promise.all(cover_promises);
+      setCoverUrls(
+        cover_url_arr.reduce((temp, { id, url }) => {
+          temp[id] = url;
+          return temp;
+        }, {})
+      );
+    }
+  } catch (error) {
+    console.error('Error:', error.message);
+  }
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -205,9 +249,8 @@ const styles = StyleSheet.create({
   },
   searchContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 16,
-    justifyContent: 'space-between', 
   },
   input: {
     flex: 1,
@@ -219,6 +262,20 @@ const styles = StyleSheet.create({
     color: '#d1d7e0', 
     borderRadius: 8,
     marginRight: 8,
+    fontSize: 16,
+  },
+  button: {
+    backgroundColor: '#6f6b88',
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#6f6b88',
+    margin: 1
+  },
+  buttonText: {
+    color: '#fff',
+    textAlign: 'center',
     fontSize: 16,
   },
   manga_block: {
@@ -243,18 +300,43 @@ const styles = StyleSheet.create({
   row: {
     justifyContent: 'space-between',
   },
-  button: {
-    backgroundColor: '#4c495d',
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#564f6f',
-    margin: 1
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  buttonText: {
-    color: '#d1d7e0',
-    textAlign: 'center',
-    fontSize: 16,
+  modalContent: {
+    width: '80%',
+    backgroundColor: '#d1d7e0',
+    borderRadius: 20,
+    padding: 20,
+    alignItems: 'center',
+  },
+  modalHeader: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#222629',
+  },
+  genreItem: {
+    paddingVertical: 10,
+  },
+  genreText: {
+    fontSize: 18,
+    color: '#222629',
+  },
+  selectedGenre: {
+    fontWeight: 'bold',
+    color: '#86C232',
+  },
+  applyButton: {
+    backgroundColor: '#9590b0',
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 20,
+    paddingVertical: 10,
+    width: '50%',
   },
 });

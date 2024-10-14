@@ -27,10 +27,10 @@ const fetchCoverArt = async (mangaId : any) => {
       return `https://uploads.mangadex.org/covers/${mangaId}/${filename}.256.jpg`;
     }
 
-    return 'https://via.placeholder.com/100x150'; 
+    return 'https://via.placeholder.com/100x150/FFFFFF/000000'; 
   } catch (error) {
     console.error('Error fetching cover art:', error.message);
-    return 'https://via.placeholder.com/100x150'; 
+    return 'https://via.placeholder.com/100x150/FFFFFF/000000'; 
   }
 };
 
@@ -157,7 +157,7 @@ export default function BookmarkScreen() {
     return (
       <TouchableOpacity>
         <View style={styles.bookmark}>
-          <Image source={{ uri: coverArt || 'https://via.placeholder.com/100x150' }} style={styles.mangaImg} />
+          <Image source={{ uri: coverArt || 'https://via.placeholder.com/100x150/FFFFFF/000000' }} style={styles.mangaImg} />
           <View style={styles.textContainer}>
             <Text style={styles.mangaTitle}>{mangaTitle || 'Load...'}</Text>
             <Text style={styles.chapterTitle}>

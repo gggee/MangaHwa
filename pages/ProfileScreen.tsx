@@ -127,9 +127,9 @@ const fetchCoverArt = async (mangaId) => {
         return `https://uploads.mangadex.org/covers/${mangaId}/${filename}.256.jpg`;
       }
     }
-    return 'https://via.placeholder.com/100x150'; 
+    return 'https://via.placeholder.com/100x150/FFFFFF/000000'; 
   } catch (error) {
-    return 'https://via.placeholder.com/100x150'; 
+    return 'https://via.placeholder.com/100x150/FFFFFF/000000'; 
   }
 };
 

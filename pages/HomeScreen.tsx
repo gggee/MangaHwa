@@ -33,7 +33,7 @@ export default function HomeScreen() {
                 onPress={() => handleMangaPress(manga)}
               >
                 <Image
-                  source={{ uri: coverUrls[manga.id] || 'https://via.placeholder.com/100x150' }}
+                  source={{ uri: coverUrls[manga.id] || 'https://via.placeholder.com/100x150/FFFFFF/000000' }}
                   style={styles.mangaImg}
                 />
                 <Text style={styles.mangaTitle} numberOfLines={2} ellipsizeMode="tail">
@@ -54,7 +54,7 @@ export default function HomeScreen() {
                 onPress={() => handleMangaPress(manga)}
               >
                 <Image
-                  source={{ uri: coverUrls[manga.id] || 'https://via.placeholder.com/100x150' }}
+                  source={{ uri: coverUrls[manga.id] || 'https://via.placeholder.com/100x150/FFFFFF/000000' }}
                   style={styles.mangaImg}
                 />
                 <Text style={styles.mangaTitle} numberOfLines={2} ellipsizeMode="tail">
@@ -75,7 +75,7 @@ export default function HomeScreen() {
                 onPress={() => handleMangaPress(manga)}
               >
                 <Image
-                  source={{ uri: coverUrls[manga.id] || 'https://via.placeholder.com/100x150' }}
+                  source={{ uri: coverUrls[manga.id] || 'https://via.placeholder.com/100x150/FFFFFF/000000' }}
                   style={styles.mangaImg}
                 />
                 <Text style={styles.mangaTitle} numberOfLines={2} ellipsizeMode="tail">
