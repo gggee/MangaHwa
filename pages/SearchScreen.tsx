@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 const availableGenres = [
   'Romance', 'Drama', 'Fantasy', 'Action', 'Comedy',
-  'Adventure', 'Horror', 'Mystery', 'Sci-Fi', 'Slice of Life',
+  'Adventure', 'Horror', 'Mystery', 'Survival', 'Slice of Life', 'Magic', 'Thriller'
 ];
 
 export default function SearchScreen({ route }) {
@@ -89,7 +90,7 @@ export default function SearchScreen({ route }) {
             onChangeText={setTitle}
           />
           <TouchableOpacity style={styles.button} onPress={() => setModalVisible(true)}>
-            <Text style={styles.buttonText}>Genres</Text>
+            <Ionicons name="options-outline" size={22} color="#fff" />
           </TouchableOpacity>
           <TouchableOpacity style={styles.button} onPress={handleSearch}>
             <Text style={styles.buttonText}>Search</Text>

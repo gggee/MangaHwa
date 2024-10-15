@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, FlatList, SafeAreaView, TouchableOpacity, Button } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function ChapterScreen() {
   const route = useRoute();
@@ -33,18 +34,22 @@ export default function ChapterScreen() {
   };
 
   const renderChapterItem = ({ item }: { item: any }) => (
-    <TouchableOpacity onPress={() => handleSelectChapter(item)}>
+    <TouchableOpacity onPress={() => handleSelectChapter(item)} style={styles.chapterRow}>
+      <Ionicons name="book-outline" size={20} color="#26242e" style={styles.chapterIcon} />
       <Text style={styles.chapter_item}>
-        Chapter {item.attributes.chapter}: {item.attributes.title || 'Без названия'}
+        <Text style={styles.boldText}>Chapter {item.attributes.chapter}</Text>. {item.attributes.title ? item.attributes.title.slice(0, 28) + (item.attributes.title.length > 30 ? '...' : '') : 'Без названия'}
       </Text>
     </TouchableOpacity>
   );
-
+  
   return (
     <SafeAreaView style={styles.container}>
+      <View style={styles.backBlock}>
+          <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
+              <Ionicons name="arrow-back-outline" size={22} color="#fff" />
+          </TouchableOpacity>
+      </View>
       <View style={styles.block}>
-        <Button title="Back to manga" onPress={() => navigation.goBack()} />
-        <Text style={styles.header}>Chapters:</Text>
         {load ? (
           <Text style={styles.loading}>Load...</Text>
         ) : (
@@ -52,6 +57,7 @@ export default function ChapterScreen() {
             data={chapters}
             keyExtractor={(item) => item.id}
             renderItem={renderChapterItem}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
           />
         )}
       </View>
@@ -89,25 +95,56 @@ async function getChapterPages(chapterId: string) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    paddingHorizontal: 16,
-    paddingTop: 40,
-    paddingBottom: 20,
+    backgroundColor: '#d1d7e0'
   },
   block: {
     flex: 1,
+    paddingHorizontal: 14,
   },
-  header: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 16,
+  backBlock: {
+    height: 50,
+    backgroundColor: '#6f6b88',
+    marginBottom: 6
   },
   chapter_item: {
     fontSize: 16,
-    marginVertical: 4,
+    marginVertical: 5,
+    paddingBottom: 6,
+    paddingTop: 6,
+    color: '#26242e'
   },
   loading: {
     fontSize: 18,
     textAlign: 'center',
     marginVertical: 20,
+  },
+  backButton: {
+    position: 'absolute',
+    top: 4, 
+    left: 2, 
+    zIndex: 1,
+    borderRadius: 20,
+    padding: 10, 
+    elevation: 2, 
+    marginBottom: 30,
+  },
+  separator: {
+    height: 0.5, 
+    backgroundColor: '#9590b0',
+    marginVertical: 5,
+    width: '85%',
+    alignSelf: 'flex-end'
+  },
+  boldText: {
+    fontWeight: 'bold', 
+    color: '#26242e'
+  },
+  chapterIcon: {
+    marginRight: 10, 
+  },
+  chapterRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 5,
   },
 });

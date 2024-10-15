@@ -38,7 +38,7 @@ export default function MangaScreen() {
     }
 
     try {
-      const response = await fetch('http://192.168.0.103:3001/collection', {
+      const response = await fetch('http://192.168.0.100:3001/collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export default function MangaScreen() {
 
   const sendMangaToServer = async (mangaData : any) => {
     try {
-      const response = await fetch('http://192.168.0.103:3001/add-manga', {
+      const response = await fetch('http://192.168.0.100:3001/add-manga', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +138,9 @@ export default function MangaScreen() {
         </View>
 
         <Text style={styles.descrip}>
-          {isExpanded ? description : `${description.slice(0, 200)}...`}
+          {description
+            ? (isExpanded ? description : `${description.slice(0, 200)}...`)
+            : 'Без описания'}
         </Text>
         <TouchableOpacity onPress={toggleDescription}>
           <Text style={styles.readMore}>

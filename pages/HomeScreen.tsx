@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#d1d7e0',
-    paddingHorizontal: 16,
+    paddingHorizontal: 5,
     paddingTop: 40,
   },
   mangaScroll: {
@@ -244,6 +244,7 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#2d283e',
     marginBottom: 10,
+    paddingLeft: 5
   },
   mangaBlock: {
     marginBottom: 20,
