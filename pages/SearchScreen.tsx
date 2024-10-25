@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, Button, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
+import { View, Text, TextInput, Button, ActivityIndicator, FlatList, TouchableOpacity, StyleSheet, SafeAreaView, Image, Modal, TouchableWithoutFeedback } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -111,25 +111,39 @@ export default function SearchScreen({ route }) {
         visible={modalVisible}
         onRequestClose={() => setModalVisible(false)}
       >
-        <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-          <View style={styles.modalContainer}>
-            <TouchableWithoutFeedback>
-              <View style={styles.modalContent}>
-                <Text style={styles.modalHeader}>Genres</Text>
+      <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
+        <View style={styles.modalContainer}>
+          <TouchableWithoutFeedback>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalHeader}>Genres</Text>
+              <View style={styles.genreList}>
                 {availableGenres.map((genre) => (
-                  <TouchableOpacity key={genre} onPress={() => toggleGenre(genre)} style={styles.genreItem}>
-                    <Text style={[styles.genreText, selectedGenres.includes(genre) && styles.selectedGenre]}>
+                  <TouchableOpacity
+                    key={genre}
+                    onPress={() => toggleGenre(genre)}
+                    style={[
+                      styles.genreItem,
+                      selectedGenres.includes(genre) && styles.selectedGenreItem,
+                    ]}
+                  >
+                    <Text
+                      style={[
+                        styles.genreText,
+                        selectedGenres.includes(genre) && styles.selectedGenreText,
+                      ]}
+                    >
                       {genre}
                     </Text>
                   </TouchableOpacity>
                 ))}
-                <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
-                  <Text style={styles.buttonText}>Apply</Text>
-                </TouchableOpacity>
               </View>
-            </TouchableWithoutFeedback>
-          </View>
-        </TouchableWithoutFeedback>
+              <TouchableOpacity style={styles.applyButton} onPress={applyFilters}>
+                <Text style={styles.buttonText}>Apply</Text>
+              </TouchableOpacity>
+            </View>
+          </TouchableWithoutFeedback>
+        </View>
+      </TouchableWithoutFeedback>
       </Modal>
     </SafeAreaView>
   );
@@ -288,7 +302,7 @@ const styles = StyleSheet.create({
     width: 100,
     height: 150,
     marginBottom: 8,
-    borderRadius: 8,
+    borderRadius: 5,
     borderColor: '#564f6f',
     borderWidth: 1
   },
@@ -309,7 +323,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     width: '80%',
-    backgroundColor: '#d1d7e0',
+    backgroundColor: '#fff',
     borderRadius: 20,
     padding: 20,
     alignItems: 'center',
@@ -318,26 +332,43 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: 'bold',
     marginBottom: 10,
-    color: '#222629',
+    color: '#4c495d',
+  },
+  genreList: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center'
   },
   genreItem: {
-    paddingVertical: 10,
+    width: '40%',
+    borderWidth: 1,
+    borderColor: '#9590b0',
+    borderRadius: 10,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    margin: 5,
+    backgroundColor: '#9590b0',
+    alignItems: 'center',
   },
   genreText: {
-    fontSize: 18,
-    color: '#222629',
+    color: '#fff',
+    textAlign: 'center',
   },
   selectedGenre: {
     fontWeight: 'bold',
     color: '#86C232',
   },
   applyButton: {
-    backgroundColor: '#9590b0',
+    backgroundColor: '#6f6b88',
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
     marginTop: 20,
     paddingVertical: 10,
     width: '50%',
+  },
+  selectedGenreItem: {
+    backgroundColor: '#4c495d',
+    borderColor: '#4c495d',
   },
 });

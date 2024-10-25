@@ -1,12 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator, SafeAreaView, Image, TouchableOpacity, Alert } from 'react-native';
 import axios from 'axios';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native'; 
 import { useAuth } from '../context/AuthContext';
 
 const fetchBookmarks = async (userId : any) => {
   try {
-    const resp = await axios.get(`http://192.168.0.100:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.105:3001/bookmarks/${userId}`);
     return resp.data; 
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);
@@ -70,7 +71,7 @@ const fetchMangaTitle = async (mangaId : any) => {
 
 const deleteBookmark = async (userId : any, chapterId : any) => {
   try {
-    await axios.delete(`http://192.168.0.100:3001/bookmarks/${userId}/${chapterId}`);
+    await axios.delete(`http://192.168.0.105:3001/bookmarks/${userId}/${chapterId}`);
     return true;
   } catch (err) {
     console.error('Error deleting bookmark:', err.message);
@@ -168,17 +169,17 @@ export default function BookmarkScreen() {
             )}
           </View>
           <TouchableOpacity onPress={() => handleDeleteBookmark(item.chapter_id)} style={styles.deleteBtn}>
-            <Text style={styles.deleteBtnTxt}>Delete</Text>
+            <Ionicons name="trash-outline" size={22} color="#564f6f" /> 
           </TouchableOpacity>
         </View>
       </TouchableOpacity>
     );
   };
-
+  
   return (
     <SafeAreaView style={styles.container}>
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#564f6f" style={styles.load} />
       ) : (
         <FlatList
           data={bookmarks}
@@ -195,7 +196,7 @@ export default function BookmarkScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: '#d1d7e0',
     padding: 16,
   },
   bookmarksBlock: {
@@ -205,7 +206,8 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 10,
     fontSize: 18,
-    textAlign: 'center'
+    textAlign: 'center',
+    color: '#4c495d'
   },
   bookmark: {
     padding: 10,
@@ -215,15 +217,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   mangaImg: {
-    width: 50,
-    height: 75,
+    width: 80,
+    height: 110,
     marginRight: 10,
+    borderRadius: 8,
+    borderColor: '#564f6f',
+    borderWidth: 0.8
   },
   textContainer: {
     flex: 1,
   },
   mangaTitle: {
     fontWeight: 'bold',
+    fontSize: 16,
+    color: '#26242e'
   },
   chapterTitle: {
     color: '#666',
@@ -234,11 +241,13 @@ const styles = StyleSheet.create({
   },
   deleteBtn: {
     padding: 5,
-    backgroundColor: '#ff4d4d',
     borderRadius: 5,
     marginLeft: 10,
   },
   deleteBtnTxt: {
     color: '#fff',
+  },
+  load: {
+    marginVertical: 350
   },
 });

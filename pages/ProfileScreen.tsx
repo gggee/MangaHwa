@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { useAuth } from '../context/AuthContext'; 
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 
 export default function ProfileScreen() {
@@ -14,6 +15,7 @@ export default function ProfileScreen() {
     planned: [],
     favorites: [],
   });
+  const categories = ['read', 'reading', 'dropped', 'planned', 'favorites'];
   const statusMapping = {
     'прочитано': 'read',
     'читаю': 'reading',
@@ -32,33 +34,47 @@ export default function ProfileScreen() {
     navigation.navigate('SignIn'); 
   };
 
-  const renderMangaList = (mangaList) => {
-    if (mangaList.length === 0) { return <Text style={styles.emptyMsg}>Empty</Text>; }
+  const renderMangaList = (mangaList: any) => {
+    if (mangaList.length === 0) {
+      return <Text style={styles.emptyMsg}>Empty</Text>;
+    }
+  
     return (
-      <ScrollView horizontal style={styles.mangaList}>
-        {mangaList.map((manga) => (
-          <View key={manga.id} style={styles.mangaCard}>
-            <Image
-              source={{ uri: manga.cover_image_url }}
-              style={styles.mangaImg}
-              resizeMode="cover"
-            />
-            <Text style={styles.mangaTitle}>{manga.title}</Text>
-          </View>
-        ))}
+      <ScrollView style={styles.mangaList}>
+        <View style={styles.mangaGrid}>
+          {mangaList.map((manga) => (
+            <View key={manga.id} style={styles.mangaCard}>
+              <Image
+                source={{ uri: manga.cover_image_url }}
+                style={styles.mangaImg}
+                resizeMode="cover"
+              />
+              <Text style={styles.mangaTitle}>
+                {manga.title.length > 20 ? `${manga.title.substring(0, 20)}...` : manga.title}
+              </Text>
+            </View>
+          ))}
+        </View>
       </ScrollView>
     );
   };
-
-  const categories = ['read', 'reading', 'dropped', 'planned', 'favorites'];
-
+  
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.block}>
         {userProfile ? (
           <>
-            <Text>User profile: {userProfile.username}</Text>
-            <Button title="Выйти" onPress={handleLogout} />
+            <View style={styles.profileContainer}>
+              <Ionicons name="person-outline" size={52} color="#564f6f" />
+              <View style={styles.userInfoContainer}>
+                <Text style={styles.usernameText}>{userProfile.username}</Text>
+                <Text style={styles.emailText}>{userProfile.email}</Text>
+              </View>
+              <TouchableOpacity onPress={handleLogout} style={styles.logoutBtn}>
+                <Ionicons name="log-out-outline" size={28} color="#564f6f" /> 
+              </TouchableOpacity>
+            </View>
+            <Text style={styles.collectionText}>Collection</Text>
             <ScrollView horizontal style={styles.categoryScroll}>
               {categories.map((category) => (
                 <TouchableOpacity
@@ -80,11 +96,12 @@ export default function ProfileScreen() {
       </View>
     </SafeAreaView>
   );
+  
 }
 
 const fetchMangaCollections = async (userId, setMangaData, statusMapping) => {
   try {
-    const resp = await fetch(`http://192.168.0.100:3001/user-collection/${userId}`);
+    const resp = await fetch(`http://192.168.0.105:3001/user-collection/${userId}`);
     const data = await resp.json();
     const categorizedManga = {
       read: [],
@@ -136,6 +153,7 @@ const fetchCoverArt = async (mangaId) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#d1d7e0'
   },
   block: {
     flex: 1,
@@ -144,54 +162,97 @@ const styles = StyleSheet.create({
   },
   scene: {
     flex: 1,
-    padding: 10,
   },
   categoryScroll: {
     flexDirection: 'row',
     paddingVertical: 5,
     overflow: 'hidden',
-    maxHeight: 80,
+    maxHeight: 55,
   },
   categoryBtn: {
     padding: 10,
     marginRight: 10,
-    backgroundColor: '#f0f0f0',
+    backgroundColor: '#9590b0',
     borderRadius: 8,
+    marginBottom: 5
   },
   selectedCategory: {
-    backgroundColor: '#d0d0d0',
+    backgroundColor: '#4c495d',
+    color: '#fff'
   },
   categoryText: {
-    fontWeight: 'bold',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#fff'
   },
   mangaList: {
     marginTop: 10,
   },
+  mangaGrid: {
+    flexDirection: 'row', 
+    flexWrap: 'wrap', 
+    justifyContent: 'space-between', 
+  },
   mangaCard: {
-    width: 120,
-    height: 200,
-    backgroundColor: '#f0f0f0',
     marginRight: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderRadius: 8,
     padding: 5,
+    height: 200,
+    width: '30%',
+    alignItems: 'center'
   },
   mangaImg: {
     width: 100,
     height: 150,
-    borderRadius: 8,
+    borderRadius: 5,
+    borderColor: '#564f6f',
+    borderWidth: 1
   },  
   mangaTitle: {
     marginTop: 5,
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
+    color: '#4c495d',
+    width: 100,
     textAlign: 'center',
+  },
+  mangaRow: {
+    flexDirection: 'row',
   },
   emptyMsg: {
     textAlign: 'center',
     fontSize: 16,
     color: '#888', 
     marginTop: 20,
+  },
+  profileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16, 
+  },
+  usernameText: { 
+    color: '#4c495d',
+    fontSize: 16,
+    marginBottom: 5,
+    fontWeight: 'bold'
+  },
+  logoutBtn: {
+    marginLeft: 'auto', 
+    padding: 8,
+  },
+  userInfoContainer: {
+    marginLeft: 8, 
+    justifyContent: 'center', 
+  },
+  emailText: {
+    fontSize: 16, 
+    color: '#4c495d', 
+  },
+  collectionText: {
+    fontSize: 16, 
+    color: '#4c495d',
+    marginTop: 10,
+    marginBottom: 5,
+    alignSelf: 'center',
+    fontWeight: '500'
   },
 });

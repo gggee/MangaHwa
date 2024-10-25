@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { View, Text, Image, StyleSheet, Button, SafeAreaView, TextInput, FlatList, Alert, ActivityIndicator, TouchableWithoutFeedback, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, Button, SafeAreaView, TextInput, FlatList, Alert, ActivityIndicator, TouchableWithoutFeedback, TouchableOpacity, KeyboardAvoidingView, Platform } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 import { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
@@ -18,7 +18,7 @@ const fetchComments = async (
   setLoading : any) => {
   try {
     setLoading(true);
-    const resp = await axios.get(`http://192.168.0.100:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
+    const resp = await axios.get(`http://192.168.0.105:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
     setComments(resp.data);
   } catch (err) {
     console.error('Error fetching comments:', err.message);
@@ -28,36 +28,49 @@ const fetchComments = async (
 };
 
 const addComment = async (
-  userProfile : any, 
-  mangaId : any, 
-  chapterId : any, 
-  curPageIndex : any, 
-  commentText : any, 
-  setComments : any, 
-  setCommentText : any, 
-  setLoadingComment : any) => {
+  userProfile: any, 
+  mangaId: any, 
+  chapterId: any, 
+  curPageIndex: any, 
+  commentText: any, 
+  setComments: any, 
+  setCommentText: any, 
+  setLoadingComment: any
+) => {
   if (!commentText.trim()) return;
+
+  const newComment = {
+    id: Date.now(), 
+    username: userProfile.username,
+    user_id: userProfile.id,
+    comment_text: commentText,
+    created_at: new Date().toISOString(), 
+  };
+  setComments(prevComments => [...prevComments, newComment]);
+  setCommentText(''); 
+
   try {
     setLoadingComment(true);
-    const resp = await axios.post('http://192.168.0.100:3001/comments', {
+    const resp = await axios.post('http://192.168.0.105:3001/comments', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
       page_index: curPageIndex,
       comment_text: commentText,
     });
-    setComments(prevComments => prevComments.concat({
-      ...resp.data,
-      username: userProfile.username,
-      user_id: userProfile.id
-    }));    
-    setCommentText('');
+    setComments(prevComments =>
+      prevComments.map(comment => 
+        comment.id === newComment.id ? { ...resp.data, ...newComment } : comment
+      )
+    );
   } catch (err) {
     console.error('Error:', err.response ? err.response.data : err.message);
+    setComments(prevComments => prevComments.filter(comment => comment.id !== newComment.id));
   } finally {
     setLoadingComment(false);
   }
 };
+
 
 const deleteComment = async (commentId : any, userProfile : any, setComments : any) => {
   Alert.alert(
@@ -67,7 +80,7 @@ const deleteComment = async (commentId : any, userProfile : any, setComments : a
       { text: "Cancel", style: "cancel" },
       { text: "Delete", onPress: async () => {
           try {
-            await axios.delete(`http://192.168.0.100:3001/comments/${commentId}`);
+            await axios.delete(`http://192.168.0.105:3001/comments/${commentId}`);
             setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
           } catch (err) {
             console.error('Error deleting comment:', err.message);
@@ -79,7 +92,7 @@ const deleteComment = async (commentId : any, userProfile : any, setComments : a
 
 const addBookmark = async (userProfile : any, mangaId : any, chapterId : any, curPageIndex : any) => {
   try {
-    await axios.post('http://192.168.0.100:3001/bookmarks', {
+    await axios.post('http://192.168.0.105:3001/bookmarks', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -93,7 +106,7 @@ const addBookmark = async (userProfile : any, mangaId : any, chapterId : any, cu
 
 const fetchBookmarks = async (userId : any, setBookmarks : any) => {
   try {
-    const resp = await axios.get(`http://192.168.0.100:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.105:3001/bookmarks/${userId}`);
     setBookmarks(resp.data);
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);
@@ -148,11 +161,20 @@ export default function OnePageScreen() {
 
   const renderComment = ({ item }) => (
     <View style={styles.comment}>
-      <Text style={styles.commentUser}>{item.username}</Text>
-      <Text style={styles.commentTxt}>{item.comment_text}</Text>
-      <Text style={styles.commentDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+      <View style={styles.commentContent}>
+        <View style={styles.userInfo}>
+          <Ionicons name="person-outline" size={22} color="#564f6f" style={styles.profileIcon} />
+          <View style={styles.userDetails}>
+            <Text style={styles.commentUser}>{item.username}</Text>
+            <Text style={styles.commentDate}>{new Date(item.created_at).toLocaleDateString()}</Text>
+          </View>
+        </View>
+        <Text style={styles.commentTxt}>{item.comment_text}</Text>
+      </View>
       {item.user_id === userProfile.id && (
-        <Button title="Delete" onPress={() => deleteComment(item.id, userProfile, setComments)} color="#FF6347" />
+        <TouchableOpacity onPress={() => deleteComment(item.id, userProfile, setComments)}>
+          <Ionicons name="trash-outline" size={20} color="#564f6f" />
+        </TouchableOpacity>
       )}
     </View>
   );
@@ -160,76 +182,101 @@ export default function OnePageScreen() {
   return (
     <SafeAreaView style={styles.container}>
       {loading ? (
-        <ActivityIndicator size="large" color="#0000ff" />
+        <ActivityIndicator size="large" color="#564f6f" style={styles.load} />
       ) : (
-        <FlatList
-          data={comments}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderComment}
-          contentContainerStyle={styles.comments_block}
-          ListHeaderComponent={
-            <>
-              <View style={styles.headerContainer}>
-                <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
-                  <Ionicons name="arrow-back-outline" size={22} color="#fff" />
-                </TouchableOpacity>
-                <Text style={styles.header}>
-                  Chapter {chapter.attributes.chapter}
-                </Text>
-                <TouchableOpacity style={styles.bookmarkButton} onPress={handleAddBookmark}>
-                  <Ionicons name="bookmark-outline" size={22} color="#fff" />
-                </TouchableOpacity>
+        <KeyboardAvoidingView 
+          style={{ flex: 1 }} 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
+          keyboardVerticalOffset={Platform.OS === 'ios' ? 100 : 0} 
+        >
+          <FlatList
+            data={comments}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={renderComment}
+            contentContainerStyle={styles.comments_block}
+            ItemSeparatorComponent={() => <View style={styles.separator} />}
+            ListHeaderComponent={
+              <>
+                <View style={styles.headerContainer}>
+                  <TouchableOpacity style={styles.backButton} onPress={handleGoBack}>
+                    <Ionicons name="arrow-back-outline" size={22} color="#fff" />
+                  </TouchableOpacity>
+                  <Text style={styles.header}>
+                    Chapter {chapter.attributes.chapter}
+                  </Text>
+                  <TouchableOpacity style={styles.bookmarkButton} onPress={handleAddBookmark}>
+                    <Ionicons name="bookmark-outline" size={22} color="#fff" />
+                  </TouchableOpacity>
+                </View>
+                
+                <Animated.View style={[styles.pageContainer, animatedStyle]}>
+                  <TouchableWithoutFeedback onPress={() => setModalVisible(true)}>
+                    <Image source={{ uri: cur_page }} style={styles.page_img} resizeMode="contain" />
+                  </TouchableWithoutFeedback>
+                  <Modal isVisible={isModalVisible} onBackdropPress={() => setModalVisible(false)}>
+                    <View style={styles.modalContent}>
+                    <TouchableOpacity style={styles.closeButton} onPress={() => setModalVisible(false)}>
+                      <Ionicons name="arrow-back-outline" size={24} color="#fff" />
+                    </TouchableOpacity>
+                    <ImageViewer 
+                      imageUrls={[{ url: cur_page }]} 
+                      style={styles.imageViewer} 
+                      enableImageZoom={true} 
+                      renderIndicator={() => <View />}
+                    />
+                    </View>
+                  </Modal>
+                </Animated.View>
+  
+                <View style={styles.buttons}>
+                  <TouchableOpacity 
+                    onPress={handlePrevPage} 
+                    disabled={cur_page_index === 0}
+                    style={[styles.iconButton, cur_page_index === 0 && styles.disabledButton]}
+                  >
+                    <Ionicons name="chevron-back-outline" size={30} color={cur_page_index === 0 ? '#564f6f' : '#000'} />
+                  </TouchableOpacity>
+  
+                  <TouchableOpacity 
+                    onPress={handleNextPage} 
+                    disabled={cur_page_index === pages.length - 1}
+                    style={[styles.iconButton, cur_page_index === pages.length - 1 && styles.disabledButton]}
+                  >
+                    <Ionicons name="chevron-forward-outline" size={30} color={cur_page_index === pages.length - 1 ? '#564f6f' : '#000'} />
+                  </TouchableOpacity>
+                </View>
+  
+                <View style={styles.commentContainer}>
+                  <TextInput
+                    style={styles.input}
+                    value={comment_txt}
+                    onChangeText={setCommentText}
+                    placeholder="Write comments..."
+                    multiline={true} 
+                    numberOfLines={3} 
+                    scrollEnabled={true} 
+                  />
+                  <TouchableOpacity 
+                    onPress={() => addComment(userProfile, manga.id, chapter.id, cur_page_index, comment_txt, setComments, setCommentText, setLoadingComment)} 
+                    disabled={!comment_txt.trim() || loadingComment}
+                    style={[styles.sendButton, (!comment_txt.trim() || loadingComment) && styles.disabledButton]}
+                  >
+                    <Ionicons name="send" size={24} color={!comment_txt.trim() || loadingComment ? '#ccc' : '#564f6f'} />
+                  </TouchableOpacity>
+                </View>
+                {loadingComment && <ActivityIndicator size="small" color="#564f6f" />}
+              </>
+            }
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Text style={styles.emptyText}>There are no comments here yet</Text>
               </View>
-              
-              <Animated.View style={[styles.pageContainer, animatedStyle]}>
-                <TouchableWithoutFeedback onPress={() => setModalVisible(true)}>
-                  <Image source={{ uri: cur_page }} style={styles.page_img} resizeMode="contain" />
-                </TouchableWithoutFeedback>
-                <Modal isVisible={isModalVisible} onBackdropPress={() => setModalVisible(false)}>
-                  <ImageViewer imageUrls={[{ url: cur_page }]} />
-                </Modal>
-              </Animated.View>
-
-              <View style={styles.buttons}>
-                <TouchableOpacity 
-                  onPress={handlePrevPage} 
-                  disabled={cur_page_index === 0}
-                  style={[styles.iconButton, cur_page_index === 0 && styles.disabledButton]}
-                >
-                  <Ionicons name="chevron-back-outline" size={30} color={cur_page_index === 0 ? '#564f6f' : '#000'} />
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  onPress={handleNextPage} 
-                  disabled={cur_page_index === pages.length - 1}
-                  style={[styles.iconButton, cur_page_index === pages.length - 1 && styles.disabledButton]}
-                >
-                  <Ionicons name="chevron-forward-outline" size={30} color={cur_page_index === pages.length - 1 ? '#564f6f' : '#000'} />
-                </TouchableOpacity>
-              </View>
-
-              <View style={styles.commentContainer}>
-                <TextInput
-                  style={styles.input}
-                  value={comment_txt}
-                  onChangeText={setCommentText}
-                  placeholder="Write comments..."
-                />
-                <TouchableOpacity 
-                  onPress={() => addComment(userProfile, manga.id, chapter.id, cur_page_index, comment_txt, setComments, setCommentText, setLoadingComment)} 
-                  disabled={!comment_txt.trim() || loadingComment}
-                  style={[styles.sendButton, (!comment_txt.trim() || loadingComment) && styles.disabledButton]}
-                >
-                  <Ionicons name="send" size={24} color={!comment_txt.trim() || loadingComment ? '#ccc' : '#000'} />
-                </TouchableOpacity>
-              </View>
-              {loadingComment && <ActivityIndicator size="small" color="#0000ff" />}
-            </>
-          }
-        />
+            }
+          />
+        </KeyboardAvoidingView>
       )}
     </SafeAreaView>
-  );  
+  );
 }
 
 const styles = StyleSheet.create({
@@ -247,7 +294,7 @@ const styles = StyleSheet.create({
   },
   pageContainer: {
     width: '100%',
-    height: 550,
+    height: 575,
     marginBottom: 16,
     backgroundColor: '#26242e'
   },
@@ -268,24 +315,46 @@ const styles = StyleSheet.create({
     left: 10,
   },
   input: {
-    borderColor: '##6f6b88',
-    borderWidth: 1,
+    borderColor: '#6f6b88',
+    borderWidth: 0.5,
     padding: 10,
     borderRadius: 5,
     marginBottom: 10,
     width: '85%',
-    height: 55
+    height: 50, 
+    maxHeight: 140, 
   },
   comment: {
-    padding: 10,
-    borderBottomColor: '#ccc',
-    borderBottomWidth: 1,
+    flexDirection: 'row',
+    justifyContent: 'space-between', 
+    alignItems: 'center', 
+    marginBottom: 10,
+    marginLeft: 15,
+    marginTop: 10,
+    marginRight: 15
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'flex-start'
+  },
+  profileIcon: { 
+    marginTop: 5,
+  },
+  userDetails: {
+    marginLeft: 5, 
   },
   commentUser: {
     fontWeight: 'bold',
+    color: '#4c495d'
+  },
+  commentContent: {
+    flex: 1, 
+    marginRight: 10, 
   },
   commentTxt: {
-    marginVertical: 5,
+    marginVertical: 8,
+    fontSize: 14,
+    color: '#26242e'
   },
   commentDate: {
     fontSize: 12,
@@ -315,15 +384,51 @@ const styles = StyleSheet.create({
     padding: 5,
   },
   disabledButton: {
-    opacity: 0.5,
+    opacity: 0.8,
   },
   commentContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     width: '100%',
-    paddingLeft: 20
+    paddingLeft: 15
   },
   sendButton: {
     padding: 10,
+  },
+  load: {
+    marginVertical: 350
+  },
+  separator: {
+    height: 0.4, 
+    backgroundColor: '#9590b0',
+    marginVertical: 5,
+    width: '90%',
+    alignSelf: 'center'
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  emptyText: {
+    color: '#b5b4bf', 
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  imageViewer: {
+    width: '100%', 
+    height: '100%', 
+    borderRadius: 10, 
+  },
+  modalContent: {
+    height: '95%', 
+    borderRadius: 10,
+  },
+  closeButton: {
+    position: 'absolute',
+    top: 15,
+    left: 20,
+    zIndex: 1, 
   },
 });

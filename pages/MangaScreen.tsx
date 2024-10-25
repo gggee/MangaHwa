@@ -38,7 +38,7 @@ export default function MangaScreen() {
     }
 
     try {
-      const response = await fetch('http://192.168.0.100:3001/collection', {
+      const response = await fetch('http://192.168.0.105:3001/collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +63,7 @@ export default function MangaScreen() {
 
   const sendMangaToServer = async (mangaData : any) => {
     try {
-      const response = await fetch('http://192.168.0.100:3001/add-manga', {
+      const response = await fetch('http://192.168.0.105:3001/add-manga', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,83 +83,84 @@ export default function MangaScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView contentContainerStyle={styles.block}>
-      <View style={styles.img_block}>
-          {coverUrl && (
-            <Image
-              source={{ uri: coverUrl }}
-              style={styles.background_img}
-            />
-          )}
-          {coverUrl && (
-            <Image
-              source={{ uri: coverUrl }}
-              style={styles.cover_img}
-            />
-          )}
-      </View>
-      <View style={styles.textContainer}>
-        <Text style={styles.header}>{manga.attributes.title.en}</Text>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => navigation.navigate('Chapter', { manga })}
-          >
-            <Ionicons name="book-outline" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Chapters</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.button}
-            onPress={() => setModalAddVisible(true)}
-          >
-            <Ionicons name="add-circle-outline" size={20} color="#fff" />
-            <Text style={styles.buttonText}>Collection</Text>
-          </TouchableOpacity>
-        </View>
-  
-        <View style={styles.infoContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
-            <View style={styles.infoBlock}>
-              <View style={styles.infoItem}>
-                <Text style={styles.label}>Status</Text>
-                <Text style={styles.infoText}>{manga.attributes.status || 'Unknown'}</Text>
-              </View>
-              <View style={styles.separator} />
-              <View style={styles.infoItem}>
-                <Text style={styles.label}>Author</Text>
-                <Text style={styles.infoText}>{author || 'Unknown'}</Text>
-              </View>
-              <View style={styles.separator} />
-              <View style={styles.infoItem}>
-                <Text style={styles.label}>Artist</Text>
-                <Text style={styles.infoText}>{artist || 'Unknown'}</Text>
-              </View>
-            </View>
-          </ScrollView>
+        <View style={styles.img_block}>
+            {coverUrl && (
+              <Image
+                source={{ uri: coverUrl }}
+                style={styles.background_img}
+              />
+            )}
+            {coverUrl && (
+              <Image
+                source={{ uri: coverUrl }}
+                style={styles.cover_img}
+              />
+            )}
         </View>
 
-        <Text style={styles.descrip}>
-          {description
-            ? (isExpanded ? description : `${description.slice(0, 200)}...`)
-            : 'Без описания'}
-        </Text>
-        <TouchableOpacity onPress={toggleDescription}>
-          <Text style={styles.readMore}>
-            {isExpanded ? 'Hide' : 'Read more...'}
+        <View style={styles.textContainer}>
+          <Text style={styles.header}>{manga.attributes.title.en}</Text>
+          <View style={styles.buttonContainer}>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => navigation.navigate('Chapter', { manga })}
+            >
+              <Ionicons name="book-outline" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Chapters</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.button}
+              onPress={() => setModalAddVisible(true)}
+            >
+              <Ionicons name="add-circle-outline" size={20} color="#fff" />
+              <Text style={styles.buttonText}>Collection</Text>
+            </TouchableOpacity>
+          </View>
+    
+          <View style={styles.infoContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.scrollContainer}>
+              <View style={styles.infoBlock}>
+                <View style={styles.infoItem}>
+                  <Text style={styles.label}>Status</Text>
+                  <Text style={styles.infoText}>{manga.attributes.status || 'Unknown'}</Text>
+                </View>
+                <View style={styles.separator} />
+                <View style={styles.infoItem}>
+                  <Text style={styles.label}>Author</Text>
+                  <Text style={styles.infoText}>{author || 'Unknown'}</Text>
+                </View>
+                <View style={styles.separator} />
+                <View style={styles.infoItem}>
+                  <Text style={styles.label}>Artist</Text>
+                  <Text style={styles.infoText}>{artist || 'Unknown'}</Text>
+                </View>
+              </View>
+            </ScrollView>
+          </View>
+
+          <Text style={styles.descrip}>
+            {description
+              ? (isExpanded ? description : `${description.slice(0, 200)}...`)
+              : 'Без описания'}
           </Text>
-        </TouchableOpacity>
+          <TouchableOpacity onPress={toggleDescription}>
+            <Text style={styles.readMore}>
+              {isExpanded ? 'Hide' : 'Read more...'}
+            </Text>
+          </TouchableOpacity>
 
-        <View style={styles.genresContainer}>
-          {genres.map((genre, index) => (
-            <View key={index} style={styles.genreItem}>
-              <Text style={styles.genreText}>{genre}</Text>
-            </View>
-          ))}
+          <View style={styles.genresContainer}>
+            {genres.map((genre, index) => (
+              <View key={index} style={styles.genreItem}>
+                <Text style={styles.genreText}>{genre}</Text>
+              </View>
+            ))}
+          </View>
         </View>
-      </View>
-      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={24} color="#564f6f" />
-      </TouchableOpacity>
       </ScrollView>
+      <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}> 
+        <Ionicons name="arrow-back-outline" size={24} color="#564f6f" />
+      </TouchableOpacity>
 
       <Modal
         animationType="slide"
@@ -191,27 +192,48 @@ export default function MangaScreen() {
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalView}>
-            <Text style={styles.modalText}>Выберите статус для коллекцию</Text>
+            <Text style={styles.modalText}>Select a status for the collection</Text>
             <RadioButton.Group onValueChange={value => setCollectionStatus(value)} value={collectionStatus}>
-              <View style={styles.radioContainer}>
-                <RadioButton value="Прочитано" />
-                <Text>Прочитано</Text>
-              </View>
-              <View style={styles.radioContainer}>
-                <RadioButton value="Читаю" />
-                <Text>Читаю</Text>
-              </View>
-              <View style={styles.radioContainer}>
-                <RadioButton value="В планах" />
-                <Text>В планах</Text>
-              </View>
-              <View style={styles.radioContainer}>
-                <RadioButton value="Брошено" />
-                <Text>Брошено</Text>
-              </View>
-              <View style={styles.radioContainer}>
-                <RadioButton value="Любимое" />
-                <Text>Любимое</Text>
+              <View>
+                <View style={styles.radioContainer}>
+                  <RadioButton value="Прочитано" />
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioText}>Read</Text>
+                  </View>
+                </View>
+                <View style={styles.separator_collection} />
+
+                <View style={styles.radioContainer}>
+                  <RadioButton value="Читаю" />
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioText}>Reading</Text>
+                  </View>
+                </View>
+                <View style={styles.separator_collection} />
+
+                <View style={styles.radioContainer}>
+                  <RadioButton value="В планах" />
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioText}>Planned</Text>
+                  </View>
+                </View>
+                <View style={styles.separator_collection} />
+
+                <View style={styles.radioContainer}>
+                  <RadioButton value="Брошено" />
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioText}>Dropped</Text>
+                  </View>
+                </View>
+                <View style={styles.separator_collection} />
+
+                <View style={styles.radioContainer}>
+                  <RadioButton value="Любимое" />
+                  <View style={styles.radioTextContainer}>
+                    <Text style={styles.radioText}>Favorite</Text>
+                  </View>
+                </View>
+                <View style={styles.separator_collection} />
               </View>
             </RadioButton.Group>
 
@@ -219,8 +241,7 @@ export default function MangaScreen() {
               style={styles.modalButton}
               onPress={addToCollection}
               >
-              <Ionicons name="add-circle-outline" size={20} color="#fff" />
-              <Text style={styles.modalButtonText_2}>Collection</Text>
+              <Text style={styles.modalButtonText_2}>Add</Text>
             </TouchableOpacity>
             <TouchableOpacity
               style={styles.modalButton}
@@ -452,11 +473,6 @@ const styles = StyleSheet.create({
     padding: 10, 
     elevation: 2, 
   },
-  radioContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: 3,
-  },
   buttonContainer:{
     flexDirection: 'row',
     alignItems: 'center',
@@ -479,21 +495,41 @@ const styles = StyleSheet.create({
     marginLeft: 5, 
   },
   modalButtonText_2: {
-    color: '#fff',
+    color: '#6f6b88',
     fontSize: 16,
     margin: 5
   },
   modalButton: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#6f6b88', 
-    paddingVertical: 5,
-    paddingHorizontal: 10,
+    alignItems: 'center', 
     borderRadius: 10,
     margin: 5
   },
   closeButton: {
     color: '#6f6b88',
     fontSize: 16
-  }
+  },  
+  radioContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 3,
+    paddingHorizontal: 25,
+    paddingVertical: 8,
+    justifyContent: 'space-between',
+  },
+  radioTextContainer: {
+    alignItems: 'center'
+  },
+  radioText: {
+    color: '#4c495d',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginLeft: 10,
+  },
+  separator_collection: {
+    height: 0.5,
+    width: '100%',
+    backgroundColor: '#9590b0', 
+    marginVertical: 5,
+  },
 });
