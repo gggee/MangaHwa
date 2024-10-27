@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image } from 'react-native';
+import { View, Text, Button, StyleSheet, SafeAreaView, ScrollView, TouchableOpacity, Image, Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext'; 
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -34,7 +34,18 @@ export default function ProfileScreen() {
     navigation.navigate('SignIn'); 
   };
 
-  const renderMangaList = (mangaList: any) => {
+  const confirmDelete = (mangaId : any) => {
+    Alert.alert(
+      'Removing manga',
+      'Are you sure you want to remove the manga from your collection?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { text: 'Delete', onPress: () => fetchDeleteManga(mangaId, userProfile, setMangaData) },
+      ]
+    );
+  };
+
+  const renderMangaList = (mangaList : any) => {
     if (mangaList.length === 0) {
       return <Text style={styles.emptyMsg}>Empty</Text>;
     }
@@ -42,8 +53,12 @@ export default function ProfileScreen() {
     return (
       <ScrollView style={styles.mangaList}>
         <View style={styles.mangaGrid}>
-          {mangaList.map((manga) => (
-            <View key={manga.id} style={styles.mangaCard}>
+          {mangaList.map((manga : any) => (
+            <TouchableOpacity
+              key={manga.id}
+              onLongPress={() => confirmDelete(manga.id)}
+              style={styles.mangaCard}
+            >
               <Image
                 source={{ uri: manga.cover_image_url }}
                 style={styles.mangaImg}
@@ -52,7 +67,7 @@ export default function ProfileScreen() {
               <Text style={styles.mangaTitle}>
                 {manga.title.length > 20 ? `${manga.title.substring(0, 20)}...` : manga.title}
               </Text>
-            </View>
+            </TouchableOpacity>
           ))}
         </View>
       </ScrollView>
@@ -96,10 +111,9 @@ export default function ProfileScreen() {
       </View>
     </SafeAreaView>
   );
-  
 }
 
-const fetchMangaCollections = async (userId, setMangaData, statusMapping) => {
+const fetchMangaCollections = async (userId : any, setMangaData : any, statusMapping : any) => {
   try {
     const resp = await fetch(`http://192.168.0.105:3001/user-collection/${userId}`);
     const data = await resp.json();
@@ -111,7 +125,7 @@ const fetchMangaCollections = async (userId, setMangaData, statusMapping) => {
       favorites: [],
     };
 
-    await Promise.all(data.map(async (manga) => {
+    await Promise.all(data.map(async (manga : any) => {
       const coverUrl = await fetchCoverArt(manga.id);
       const status_key = statusMapping[manga.status.toLowerCase()];
       if (status_key) {
@@ -130,7 +144,25 @@ const fetchMangaCollections = async (userId, setMangaData, statusMapping) => {
   }
 };
 
-const fetchCoverArt = async (mangaId) => {
+const fetchDeleteManga = async (mangaId: any, userProfile: any, setMangaData: any) => { 
+  if (!userProfile) {
+    console.error('User profile is not defined');
+    return;
+  }
+
+  try {
+    await fetch(`http://192.168.0.105:3001/user-collection/${userProfile.id}/${mangaId}`, { method: 'DELETE' });
+    setMangaData((prevData: any) => {
+      const updatedData = { ...prevData };
+      updatedData[selectedCategory] = updatedData[selectedCategory].filter(manga => manga.id !== mangaId);
+      return updatedData;
+    });
+  } catch (error) {
+    console.error('Error deleting manga from collection:', error);
+  }
+};
+
+const fetchCoverArt = async (mangaId : any) => {
   try {
     const resp = await fetch(`https://api.mangadex.org/manga/${mangaId}`);
     const data = await resp.json();

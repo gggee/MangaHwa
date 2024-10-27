@@ -512,13 +512,14 @@ const styles = StyleSheet.create({
   radioContainer: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'center',
     marginVertical: 3,
-    paddingHorizontal: 25,
+    paddingHorizontal: 20,
     paddingVertical: 8,
     justifyContent: 'space-between',
   },
   radioTextContainer: {
-    alignItems: 'center'
+    alignSelf: 'center',
   },
   radioText: {
     color: '#4c495d',

@@ -187,6 +187,7 @@ export default function BookmarkScreen() {
           renderItem={renderBookmark}
           contentContainerStyle={styles.bookmarksBlock}
           ListHeaderComponent={<Text style={styles.bookmarksHeader}>Bookmarks</Text>}
+          ListEmptyComponent={<Text style={styles.emptyText}>Empty</Text>}
         />
       )}
     </SafeAreaView>
@@ -249,5 +250,11 @@ const styles = StyleSheet.create({
   },
   load: {
     marginVertical: 350
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 18,
+    color: '#888',
+    marginTop: 100
   },
 });

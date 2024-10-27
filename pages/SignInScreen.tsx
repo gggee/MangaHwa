@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, TextInput, Button, Alert, StyleSheet, SafeAreaView } from 'react-native';
+import { View, TextInput, TouchableOpacity, Text, Alert, StyleSheet, SafeAreaView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import axios from 'axios';
 import CryptoJS from 'crypto-js';
@@ -27,7 +27,7 @@ export default function SignInScreen() {
       if (resp.status === 200) {
         const userProfile = resp.data;
         console.log('User profile data:', userProfile);
-        
+
         if (userProfile.isAdmin) {
           signIn(userProfile);
           Alert.alert('Успешно', 'Вход выполнен как администратор!', [
@@ -55,9 +55,10 @@ export default function SignInScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.innerContainer}>
+        <Text style={styles.header}>Log in</Text>
         <TextInput
           style={styles.input}
-          placeholder="Электронная почта"
+          placeholder="Email"
           value={email}
           keyboardType="email-address"
           autoCapitalize="none"
@@ -65,13 +66,17 @@ export default function SignInScreen() {
         />
         <TextInput
           style={styles.input}
-          placeholder="Пароль"
+          placeholder="Password"
           secureTextEntry
           value={password}
           onChangeText={setPassword}
         />
-        <Button title="Войти" onPress={handleSignIn} />
-        <Button title="Зарегистрироваться" onPress={() => navigation.navigate('Register')} />
+        <TouchableOpacity style={styles.button} onPress={handleSignIn}>
+          <Text style={styles.buttonText}>Sign in</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.button2} onPress={() => navigation.navigate('Register')}>
+          <Text style={styles.buttonText}>Register</Text>
+        </TouchableOpacity>
       </View>
     </SafeAreaView>
   );
@@ -80,17 +85,56 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#d1d7e0',
   },
   innerContainer: {
     flex: 1,
     justifyContent: 'center',
     padding: 16,
+    borderRadius: 15,
+    margin: 16,
+  },
+  header: {
+    fontSize: 24,
+    fontWeight: '600',
+    color: '#6f6b88',
+    alignSelf: 'center',
+    marginBottom: 15,
   },
   input: {
     height: 40,
-    borderColor: 'gray',
-    borderWidth: 1,
+    backgroundColor: '#D1D7E0',
+    borderRadius: 10,
+    paddingHorizontal: 10,
     marginBottom: 12,
-    paddingHorizontal: 8,
+    borderWidth: 1,
+    borderColor: '#564f6f',
+    color: '#000',
+    fontSize: 16
   },
+  button: {
+    backgroundColor: '#564f6f',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+    width: '30%',
+    alignSelf: 'center',
+  },
+  buttonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  button2:{
+    backgroundColor: '#9590b0',
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderRadius: 10,
+    marginTop: 10,
+    alignItems: 'center',
+    width: '40%',
+    alignSelf: 'center',
+  }
 });
