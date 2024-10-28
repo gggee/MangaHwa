@@ -31,7 +31,7 @@ export default function SearchScreen({ route }) {
       setMangaList(manga_res);
 
       const cover_promises = manga_res.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };
@@ -188,7 +188,7 @@ const fetchRndManga = async (setMangaList : any, setCoverUrls : any) => {
       setMangaList(data.data);
 
       const cover_promis = data.data.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };
@@ -223,7 +223,7 @@ const fetchMangaByGenres = async (selectedGenres : any, setMangaList : any, setC
       setMangaList(filteredMangas);
 
       const cover_promises = filteredMangas.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+        const cover_art = manga.relationships.find((rel: any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };

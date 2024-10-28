@@ -19,7 +19,6 @@ export default function MangaScreen() {
   const [collectionStatus, setCollectionStatus] = useState('Прочитано'); 
   const [isExpanded, setIsExpanded] = useState(false);
   const description = manga.attributes.description.en;
-
   const toggleDescription = () => {
     setIsExpanded(!isExpanded);
   };
@@ -38,7 +37,7 @@ export default function MangaScreen() {
     }
 
     try {
-      const response = await fetch('http://192.168.0.105:3001/collection', {
+      const response = await fetch('http://10.1.0.128:3001/collection', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -63,7 +62,7 @@ export default function MangaScreen() {
 
   const sendMangaToServer = async (mangaData : any) => {
     try {
-      const response = await fetch('http://192.168.0.105:3001/add-manga', {
+      const response = await fetch('http://10.1.0.128:3001/add-manga', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

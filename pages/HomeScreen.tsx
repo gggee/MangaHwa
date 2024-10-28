@@ -98,7 +98,7 @@ async function fetchRndManga(setMangaList : any, setCoverUrls : any) {
     if (data.data && data.data.length > 0) {
       setMangaList(data.data);
 
-      const cover_promises = data.data.map(async (manga) => {
+      const cover_promises = data.data.map(async (manga : any) => {
         const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);

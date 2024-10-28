@@ -13,12 +13,12 @@ export default function RegisterScreen() {
   const navigation = useNavigation();
   const { signIn } = useAuth();
 
-  const requiremPassw = (password) => {
+  const requiremPassw = (password : any) => {
     const passw_req = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
     return passw_req.test(password);
   };
 
-  const requiremEmail = (email) => {
+  const requiremEmail = (email : any) => {
     return email.endsWith('@gmail.com');
   };
 
@@ -41,7 +41,7 @@ export default function RegisterScreen() {
 
     try {
       const passw_hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-      const resp = await axios.post('http://192.168.0.105:3001/register', {
+      const resp = await axios.post('http://10.1.0.128:3001/register', {
         username,
         email,
         password_hash: passw_hash,
@@ -61,7 +61,7 @@ export default function RegisterScreen() {
     }
   };
 
-  const handlePasswordChange = (text) => {
+  const handlePasswordChange = (text : any) => {
     setPassword(text);
     if (!requiremPassw(text)) {
       setPasswordWarning(

@@ -53,7 +53,7 @@ const BanUserForm = () => {
 
   const handleBanUser = async () => {
     try {
-      const resp = await axios.post('http://192.168.0.105:3001/admin/ban-user', {
+      const resp = await axios.post('http://10.1.0.128:3001/admin/ban-user', {
         user_id: userId,
         ban_duration: banDuration,
       });
@@ -116,7 +116,7 @@ export default function AdminDashboard() {
 
   const fetchComments = async () => {
     try {
-      const resp = await axios.get('http://192.168.0.105:3001/admin/comments');
+      const resp = await axios.get('http://10.1.0.128:3001/admin/comments');
       const sortedComments = resp.data.sort((a : any, b : any) => new Date(b.created_at) - new Date(a.created_at));
       setComments(sortedComments);
     } catch (error) {
@@ -127,7 +127,7 @@ export default function AdminDashboard() {
 
   const handleDeleteComment = async (commentId : any) => {
     try {
-      await axios.delete(`http://192.168.0.105:3001/admin/comments/${commentId}`);
+      await axios.delete(`http://10.1.0.128:3001/admin/comments/${commentId}`);
       setComments(comments.filter(comment => comment.id !== commentId));
     } catch (error) {
       console.error('Error deleting comment:', error);

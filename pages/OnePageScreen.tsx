@@ -18,7 +18,7 @@ const fetchComments = async (
   setLoading : any) => {
   try {
     setLoading(true);
-    const resp = await axios.get(`http://192.168.0.105:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
+    const resp = await axios.get(`http://10.1.0.128:3001/comments/${mangaId}/${chapterId}/${curPageIndex}`);
     setComments(resp.data);
   } catch (err) {
     console.error('Error fetching comments:', err.message);
@@ -51,7 +51,7 @@ const addComment = async (
 
   try {
     setLoadingComment(true);
-    const resp = await axios.post('http://192.168.0.105:3001/comments', {
+    const resp = await axios.post('http://10.1.0.128:3001/comments', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -80,7 +80,7 @@ const deleteComment = async (commentId : any, userProfile : any, setComments : a
       { text: "Cancel", style: "cancel" },
       { text: "Delete", onPress: async () => {
           try {
-            await axios.delete(`http://192.168.0.105:3001/comments/${commentId}`);
+            await axios.delete(`http://10.1.0.128:3001/comments/${commentId}`);
             setComments(prevComments => prevComments.filter(comment => comment.id !== commentId));
           } catch (err) {
             console.error('Error deleting comment:', err.message);
@@ -92,7 +92,7 @@ const deleteComment = async (commentId : any, userProfile : any, setComments : a
 
 const addBookmark = async (userProfile : any, mangaId : any, chapterId : any, curPageIndex : any) => {
   try {
-    await axios.post('http://192.168.0.105:3001/bookmarks', {
+    await axios.post('http://10.1.0.128:3001/bookmarks', {
       user_id: userProfile.id,
       manga_id: mangaId,
       chapter_id: chapterId,
@@ -106,7 +106,7 @@ const addBookmark = async (userProfile : any, mangaId : any, chapterId : any, cu
 
 const fetchBookmarks = async (userId : any, setBookmarks : any) => {
   try {
-    const resp = await axios.get(`http://192.168.0.105:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://10.1.0.128:3001/bookmarks/${userId}`);
     setBookmarks(resp.data);
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);

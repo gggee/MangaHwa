@@ -40,7 +40,7 @@ export default function ProfileScreen() {
       'Are you sure you want to remove the manga from your collection?',
       [
         { text: 'Cancel', style: 'cancel' },
-        { text: 'Delete', onPress: () => fetchDeleteManga(mangaId, userProfile, setMangaData) },
+        { text: 'Delete', onPress: () => fetchDeleteManga(mangaId, userProfile, setMangaData, selectedCategory) },
       ]
     );
   };
@@ -115,7 +115,7 @@ export default function ProfileScreen() {
 
 const fetchMangaCollections = async (userId : any, setMangaData : any, statusMapping : any) => {
   try {
-    const resp = await fetch(`http://192.168.0.105:3001/user-collection/${userId}`);
+    const resp = await fetch(`http://10.1.0.128:3001/user-collection/${userId}`);
     const data = await resp.json();
     const categorizedManga = {
       read: [],
@@ -144,14 +144,14 @@ const fetchMangaCollections = async (userId : any, setMangaData : any, statusMap
   }
 };
 
-const fetchDeleteManga = async (mangaId: any, userProfile: any, setMangaData: any) => { 
+const fetchDeleteManga = async (mangaId: any, userProfile: any, setMangaData: any, selectedCategory: string) => { 
   if (!userProfile) {
     console.error('User profile is not defined');
     return;
   }
 
   try {
-    await fetch(`http://192.168.0.105:3001/user-collection/${userProfile.id}/${mangaId}`, { method: 'DELETE' });
+    await fetch(`http://10.1.0.128:3001/user-collection/${userProfile.id}/${mangaId}`, { method: 'DELETE' });
     setMangaData((prevData: any) => {
       const updatedData = { ...prevData };
       updatedData[selectedCategory] = updatedData[selectedCategory].filter(manga => manga.id !== mangaId);
@@ -161,6 +161,7 @@ const fetchDeleteManga = async (mangaId: any, userProfile: any, setMangaData: an
     console.error('Error deleting manga from collection:', error);
   }
 };
+
 
 const fetchCoverArt = async (mangaId : any) => {
   try {
