@@ -7,7 +7,7 @@ import { useAuth } from '../context/AuthContext';
 
 const fetchBookmarks = async (userId : any) => {
   try {
-    const resp = await axios.get(`http://10.1.0.128:3001/bookmarks/${userId}`);
+    const resp = await axios.get(`http://192.168.0.101:3001/bookmarks/${userId}`);
     return resp.data; 
   } catch (err) {
     console.error('Error fetching bookmarks:', err.message);
@@ -71,7 +71,7 @@ const fetchMangaTitle = async (mangaId : any) => {
 
 const deleteBookmark = async (userId : any, chapterId : any) => {
   try {
-    await axios.delete(`http://10.1.0.128:3001/bookmarks/${userId}/${chapterId}`);
+    await axios.delete(`http://192.168.0.101:3001/bookmarks/${userId}/${chapterId}`);
     return true;
   } catch (err) {
     console.error('Error deleting bookmark:', err.message);

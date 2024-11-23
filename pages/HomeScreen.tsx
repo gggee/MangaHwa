@@ -99,7 +99,7 @@ async function fetchRndManga(setMangaList : any, setCoverUrls : any) {
       setMangaList(data.data);
 
       const cover_promises = data.data.map(async (manga : any) => {
-        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+        const cover_art = manga.relationships.find((rel : any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };
@@ -108,11 +108,11 @@ async function fetchRndManga(setMangaList : any, setCoverUrls : any) {
       });
 
       const cover_url_arr = await Promise.all(cover_promises);
-      setCoverUrls(
+      setCoverUrls((prevUrls : any) =>
         cover_url_arr.reduce((temp, { id, url }) => {
           temp[id] = url;
           return temp;
-        }, {})
+        }, { ...prevUrls })
       );
     }
   } catch (error) {
@@ -133,8 +133,8 @@ async function fetchRndRomanceManga(setMangaList : any, setCoverUrls : any) {
 
       setMangaList(romanceMangas);
 
-      const cover_promises = romanceMangas.map(async (manga) => {
-        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+      const cover_promises = romanceMangas.map(async (manga : any) => {
+        const cover_art = manga.relationships.find((rel : any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };
@@ -143,11 +143,11 @@ async function fetchRndRomanceManga(setMangaList : any, setCoverUrls : any) {
       });
 
       const cover_url_arr = await Promise.all(cover_promises);
-      setCoverUrls(
+      setCoverUrls((prevUrls : any) =>
         cover_url_arr.reduce((temp, { id, url }) => {
           temp[id] = url;
           return temp;
-        }, {})
+        }, { ...prevUrls })
       );
     }
   } catch (error) {
@@ -168,8 +168,8 @@ async function fetchActionAdventureManga(setMangaList : any, setCoverUrls : any)
 
       setMangaList(actionAdventureMangas);
 
-      const cover_promises = actionAdventureMangas.map(async (manga) => {
-        const cover_art = manga.relationships.find((rel) => rel.type === 'cover_art');
+      const cover_promises = actionAdventureMangas.map(async (manga : any) => {
+        const cover_art = manga.relationships.find((rel : any) => rel.type === 'cover_art');
         if (cover_art) {
           const coverUrl = await fetchCoverArt(cover_art.id);
           return { id: manga.id, url: coverUrl };
@@ -178,11 +178,11 @@ async function fetchActionAdventureManga(setMangaList : any, setCoverUrls : any)
       });
 
       const cover_url_arr = await Promise.all(cover_promises);
-      setCoverUrls(
+      setCoverUrls((prevUrls : any) =>
         cover_url_arr.reduce((temp, { id, url }) => {
           temp[id] = url;
           return temp;
-        }, {})
+        }, { ...prevUrls })
       );
     }
   } catch (error) {

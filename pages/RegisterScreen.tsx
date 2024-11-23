@@ -41,7 +41,7 @@ export default function RegisterScreen() {
 
     try {
       const passw_hash = CryptoJS.SHA256(password).toString(CryptoJS.enc.Hex);
-      const resp = await axios.post('http://10.1.0.128:3001/register', {
+      const resp = await axios.post('http://192.168.0.101:3001/register', {
         username,
         email,
         password_hash: passw_hash,
