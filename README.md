@@ -32,3 +32,9 @@
   <img src="assets/img/profile.jpg" alt="Profile" width="280" height="550" style="border: 2px solid red;">
   <img src="assets/img/profile2.jpg" alt="Profile2" width="280" height="550" style="border: 2px solid red;">
 </div>
+
+## Registration
+<div style="display: flex; gap: 10px;">
+  <img src="assets/img/login.jpg" alt="login" width="280" height="550" style="border: 2px solid red;">
+  <img src="assets/img/regis.jpg" alt="regis" width="280" height="550" style="border: 2px solid red;">
+</div>
