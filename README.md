@@ -22,3 +22,13 @@
   <img src="assets/img/Comment.jpg" alt="Genre" width="280" height="550" style="border: 2px solid red;">
 </div>
 
+## Bookmarks
+### All bookmarks made by chapters and pages are displayed here.
+<img src="assets/img/bookmark.jpg" alt="HomeScreen" width="280" height="550">
+
+## Profile
+### This is what a profile looks like with manga added to the collections 
+<div style="display: flex; gap: 10px;">
+  <img src="assets/img/profile.jpg" alt="Search Page" width="280" height="550" style="border: 2px solid red;">
+  <img src="assets/img/profile2.jpg" alt="Genre" width="280" height="550" style="border: 2px solid red;">
+</div>
